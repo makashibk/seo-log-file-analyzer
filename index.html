@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SEO Log Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a73e8;--blue-l:#e8f0fe;--blue-d:#1557b0;
+  --green:#137333;--green-l:#e6f4ea;
+  --red:#c5221f;--red-l:#fce8e6;
+  --amber:#b06000;--amber-l:#fef7e0;
+  --purple:#6200ee;--purple-l:#f3e8fd;
+  --t1:#202124;--t2:#5f6368;--t3:#9aa0a6;
+  --border:#e0e0e0;--border2:#dadce0;
+  --bg:#f8f9fa;--surf:#fff;--r:8px;
+}
+html{min-height:100%}
+body{min-height:100vh;background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+
+/* ── HEADER ── */
+#hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;gap:10px;padding:0 20px;height:60px;background:var(--surf);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(60,64,67,.15)}
+#hdr-logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
+#hdr-icon{width:30px;height:30px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+#hdr-name{font-weight:700;font-size:15px;white-space:nowrap}
+#hdr-div{width:1px;height:22px;background:var(--border);margin:0 2px;flex-shrink:0}
+#hdr-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;flex:1}
+#hdr-file{font-size:13px;color:var(--t2);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:11px;font-size:12px;font-weight:500;white-space:nowrap;flex-shrink:0}
+.c-blue{background:var(--blue-l);color:var(--blue)}.c-green{background:var(--green-l);color:var(--green)}
+.c-red{background:var(--red-l);color:var(--red)}.c-amber{background:var(--amber-l);color:var(--amber)}
+.c-grey{background:#f1f3f4;color:var(--t2)}.c-purple{background:var(--purple-l);color:var(--purple)}
+#hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--t2);font-family:inherit;font-size:13px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-ghost:hover{background:var(--bg);color:var(--t1)}
+.btn-primary{background:var(--blue);border:none;color:#fff;font-family:inherit;font-size:13px;font-weight:500;padding:7px 16px;border-radius:6px;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-recent{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border2);color:var(--t2);font-family:inherit;font-size:13px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-recent:hover{background:var(--bg);color:var(--t1)}
+.rcount{background:var(--blue-l);color:var(--blue);border-radius:9px;font-size:11px;font-weight:700;padding:1px 6px}
+
+/* ── TABS ── */
+#tabs-bar{position:sticky;top:60px;z-index:200;background:var(--surf);border-bottom:1px solid var(--border);padding:0 18px;display:flex;overflow-x:auto;gap:0;box-shadow:0 1px 3px rgba(60,64,67,.08)}
+#tabs-bar::-webkit-scrollbar{height:3px}
+.ntab{background:none;border:none;border-bottom:3px solid transparent;font-family:inherit;font-size:13px;font-weight:500;color:var(--t2);padding:13px 15px;cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px}
+.ntab:hover{color:var(--blue);background:var(--blue-l)}.ntab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.ntab .nb{background:var(--red-l);color:var(--red);font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;display:none}
+
+/* ── UPLOAD ── */
+#upload-screen{display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 60px);padding:40px 20px;gap:0}
+.ucard{background:var(--surf);border:2px dashed var(--border2);border-radius:16px;padding:52px 44px;text-align:center;max-width:560px;width:100%;cursor:pointer;transition:all .2s}
+.ucard:hover,.ucard.drag{border-color:var(--blue);background:var(--blue-l)}
+.u-icon{font-size:48px;margin-bottom:16px}.u-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.u-sub{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:20px}
+.u-fmts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.fmt{padding:3px 11px;border-radius:11px;font-size:12px;font-weight:500;background:var(--green-l);color:var(--green);border:1px solid #b7dfbf}
+.u-hint{margin-top:16px;padding:10px 14px;background:var(--bg);border-radius:7px;font-size:11px;color:var(--t3);text-align:left;line-height:1.9;border:1px solid var(--border)}
+.u-hint code{font-family:'DM Mono',monospace;color:var(--blue);font-size:10px}
+input[type=file]{display:none}
+
+/* ── FILE QUEUE ── */
+#file-queue{max-width:560px;width:100%;margin-top:16px;display:none}
+.fq-header{font-size:13px;font-weight:600;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.fq-list{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.fq-item{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--border);border-radius:7px;padding:10px 14px}
+.fq-icon{font-size:16px;flex-shrink:0}.fq-name{flex:1;font-size:13px;color:var(--t1);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fq-size{font-size:12px;color:var(--t3);flex-shrink:0}.fq-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:2px 5px;border-radius:3px;flex-shrink:0}
+.fq-del:hover{color:var(--red);background:var(--red-l)}
+.fq-actions{display:flex;gap:8px;align-items:center}
+.btn-add{background:none;border:1px dashed var(--border2);color:var(--t2);font-family:inherit;font-size:13px;font-weight:500;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .15s}
+.btn-add:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── RECENT ON UPLOAD ── */
+#recent-on-upload{max-width:900px;width:100%;margin-top:28px;display:none}
+.rou-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rou-title{font-size:14px;font-weight:600;color:var(--t2)}
+.rou-clear{background:none;border:none;font-size:12px;color:var(--t3);cursor:pointer;font-family:inherit}
+.rou-clear:hover{color:var(--red)}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:11px}
+.proj-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:15px;position:relative;border-top:3px solid var(--blue);cursor:pointer;transition:all .2s}
+.proj-card:hover{box-shadow:0 2px 12px rgba(26,115,232,.15);border-top-color:var(--blue-d);transform:translateY(-1px)}
+.proj-card-name{font-weight:600;font-size:14px;color:var(--t1);margin-bottom:3px;padding-right:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj-card-file{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:9px}
+.proj-card-stats{display:flex;gap:10px;flex-wrap:wrap}
+.pcs{font-size:12px;color:var(--t2)}.pcs strong{color:var(--t1)}
+.proj-card-date{font-size:11px;color:var(--t3);margin-top:7px}
+.proj-card-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:3px}
+.proj-card-del:hover{color:var(--red);background:var(--red-l)}
+.proj-card-no-data{font-size:11px;color:var(--t3);margin-top:4px;font-style:italic}
+
+/* ── LOADING ── */
+#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);gap:14px;padding:40px}
+.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-size:16px;font-weight:600}.load-sub{font-size:13px;color:var(--t2);min-height:18px;text-align:center;max-width:320px}
+.prog-track{width:280px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-bar{height:100%;background:var(--blue);border-radius:3px;transition:width .3s;width:0%}
+#err-box{display:none;background:#fce8e6;border:1px solid #f28b82;border-radius:8px;padding:14px 18px;max-width:500px;color:var(--red);font-size:13px;line-height:1.7}
+#err-box strong{display:block;font-size:14px;margin-bottom:4px}
+
+/* ── PROJECTS PANEL ── */
+#proj-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500}
+#proj-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--surf);box-shadow:-4px 0 24px rgba(0,0,0,.18);z-index:501;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+#proj-panel.open{transform:translateX(0)}
+.pp-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pp-title{font-size:16px;font-weight:700}
+.pp-close{background:none;border:none;font-size:20px;color:var(--t2);cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1}
+.pp-close:hover{background:var(--bg)}
+.pp-body{flex:1;overflow-y:auto;padding:14px}
+.pp-empty{text-align:center;padding:48px 20px;color:var(--t3);font-size:14px}
+.pp-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;position:relative;border-left:3px solid var(--blue);cursor:pointer;transition:all .18s}
+.pp-item:hover{background:var(--blue-l);border-left-color:var(--blue-d)}
+.pp-item-name{font-weight:600;font-size:14px;margin-bottom:3px;padding-right:28px}
+.pp-item-file{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:7px}
+.pp-item-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.pp-stat{font-size:12px;color:var(--t2)}.pp-stat strong{color:var(--t1)}
+.pp-item-date{font-size:11px;color:var(--t3)}
+.pp-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:2px 5px;border-radius:3px}
+.pp-del:hover{color:var(--red);background:var(--red-l)}
+.pp-item-no-data{font-size:11px;color:var(--t3);font-style:italic;margin-top:2px}
+
+/* ── DASHBOARD ── */
+#dashboard{display:none}
+.panel{display:none;padding:22px;max-width:1400px;margin:0 auto}
+.panel.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.card:last-child{margin-bottom:0}
+.ct{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.cs{font-size:12px;color:var(--t3);margin-bottom:13px}
+
+/* ── KPI GRID ── */
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;margin-bottom:18px}
+.kc{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.kl{font-size:12px;font-weight:500;color:var(--t2);margin-bottom:5px}
+.kv{font-size:23px;font-weight:700;line-height:1.1;color:var(--t1)}
+.ks{font-size:11px;color:var(--t3);margin-top:3px}
+.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+
+/* ── CHARTS ── */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:700px){.crow{grid-template-columns:1fr}}
+canvas{max-height:220px}
+
+/* ── TABLES ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--bg);padding:9px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th.r{text-align:right}
+tbody tr{border-bottom:1px solid #f1f3f4;transition:background .1s}
+tbody tr:hover{background:#f8f9fa}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:9px 11px;vertical-align:middle}
+tbody td.r{text-align:right}
+.tp{color:var(--blue);font-family:'DM Mono',monospace;font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;display:block}
+/* URL expand on hover */
+td:hover>.tp{overflow:visible;white-space:normal;word-break:break-all;background:var(--surf);position:relative;z-index:5;box-shadow:0 2px 12px rgba(0,0,0,.12);border-radius:4px;padding:4px 8px;margin:-4px -8px}
+.tn{font-weight:600}.td{color:var(--t3)}
+.bari{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.bart{width:54px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.barf{height:100%;border-radius:3px;background:var(--blue)}
+.pctt{font-size:11px;color:var(--t3);min-width:30px;text-align:right}
+.show-more-btn{display:block;text-align:center;padding:11px;font-size:12px;color:var(--blue);cursor:pointer;border-top:1px solid var(--border);background:none;border-left:none;border-right:none;border-bottom:none;font-family:inherit;width:100%;font-weight:500}
+.show-more-btn:hover{background:var(--blue-l)}
+
+/* ── BOT CARDS ── */
+.bg{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:11px;margin-bottom:14px}
+.bc{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:15px;border-top:3px solid}
+.bc-name{font-weight:700;font-size:14px;margin-bottom:1px}
+.bc-sub{font-size:11px;color:var(--t3);margin-bottom:9px}
+.bc-num{font-size:21px;font-weight:700}
+.bc-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.bprog{height:4px;background:var(--border);border-radius:2px;margin-top:9px;overflow:hidden}
+.bpf{height:100%;border-radius:2px}
+
+/* ── CATEGORY FILTER ── */
+.cat-overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.cov-card{padding:13px 14px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);border-top:3px solid}
+.cov-label{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.cov-val{font-size:20px;font-weight:700;color:var(--t1)}.cov-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-tab{background:var(--bg);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:12px;font-weight:500;color:var(--t2);padding:5px 13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.cat-tab:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+.cat-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-count{background:rgba(255,255,255,.25);border-radius:8px;padding:0 5px;font-size:10px;font-weight:700}
+.cat-tab:not(.active) .cat-count{background:var(--border);color:var(--t2)}
+.human-card{background:linear-gradient(135deg,var(--green-l),#f0fdf4);border:1px solid #b7dfbf;border-radius:var(--r);padding:18px;margin-bottom:14px;border-left:4px solid var(--green)}
+.human-card-title{font-weight:700;font-size:15px;color:var(--green);margin-bottom:4px}
+.human-card-sub{font-size:13px;color:var(--t2);margin-bottom:12px}
+.human-stats-row{display:flex;gap:20px;flex-wrap:wrap}
+.hstat{text-align:center}.hstat-val{font-size:22px;font-weight:700;color:var(--t1)}.hstat-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ── ISSUES ── */
+.il{display:flex;flex-direction:column;gap:11px}
+.ic{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:15px 18px;border-left:4px solid}
+.ic.crit{border-left-color:var(--red)}.ic.warn{border-left-color:var(--amber)}
+.ic.info{border-left-color:var(--blue)}.ic.good{border-left-color:var(--green)}
+.ih{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px}
+.ibadge{padding:3px 7px;border-radius:9px;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.bcrit{background:var(--red-l);color:var(--red)}.bwarn{background:var(--amber-l);color:var(--amber)}
+.binfo{background:var(--blue-l);color:var(--blue)}.bgood{background:var(--green-l);color:var(--green)}
+.ititle{font-weight:700;font-size:14px;flex:1}
+.icnt{font-weight:700;font-size:14px;color:var(--t2);flex-shrink:0}
+.idesc{font-size:13px;color:var(--t2);margin-bottom:7px;line-height:1.6}
+.idet{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;background:var(--bg);padding:7px 9px;border-radius:5px;margin-bottom:8px;line-height:1.7;word-break:break-all}
+.ifix{background:var(--blue-l);border-radius:5px;padding:9px 13px;font-size:12px;color:#1557b0;line-height:1.6}
+.ifix strong{color:var(--blue-d)}
+.i-footer{display:flex;align-items:center;justify-content:flex-end;margin-top:10px}
+.icheck-btn{background:none;border:1px solid var(--blue);color:var(--blue);font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;cursor:pointer;transition:all .15s}
+.icheck-btn:hover{background:var(--blue);color:#fff}
+.issue-urls-expand{display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.issue-urls-expand.open{display:block}
+.issue-url-table{width:100%;border-collapse:collapse;font-size:12px}
+.issue-url-table td{padding:6px 9px;border-bottom:1px solid #f1f3f4;vertical-align:middle}
+.issue-url-table td:first-child{font-family:'DM Mono',monospace;color:var(--blue);word-break:break-all;max-width:440px}
+.issue-url-table td:last-child{text-align:right;font-weight:600;color:var(--t1);white-space:nowrap;padding-left:16px}
+.issue-url-table tr:last-child td{border-bottom:none}
+
+/* ── ERRORS ── */
+.err-code-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.err-code-card{padding:12px 16px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);text-align:center;border-top:3px solid;cursor:pointer;transition:all .15s;min-width:90px}
+.err-code-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);transform:translateY(-1px)}
+.err-code-val{font-size:20px;font-weight:700}.err-code-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* Errors by Crawler interactive */
+.err-bot-wrap{margin-bottom:4px}
+.err-bot-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:30px}
+.err-bot-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid transparent}
+.err-bot-chip-del{background:none;border:none;cursor:pointer;font-size:12px;color:inherit;opacity:.7;padding:0;line-height:1}
+.err-bot-chip-del:hover{opacity:1}
+.err-clear-btn{background:none;border:none;font-size:12px;color:var(--t3);cursor:pointer;font-family:inherit;padding:0}
+.err-clear-btn:hover{color:var(--red)}
+.err-bot-bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:background .1s;padding-left:6px;border-radius:5px}
+.err-bot-bar-row:hover{background:var(--bg)}
+.err-bot-bar-row.selected{background:var(--blue-l)}
+.err-bot-bar-name{font-size:12px;font-weight:500;color:var(--t1);width:160px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.err-bot-bar-track{flex:1;height:16px;background:var(--bg);border-radius:4px;overflow:hidden}
+.err-bot-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff;font-weight:600;min-width:8px}
+.err-bot-bar-count{font-size:12px;font-weight:600;color:var(--t1);width:50px;text-align:right;flex-shrink:0}
+.err-section-anchor{scroll-margin-top:130px}
+
+/* ── FILTERS / EXPLORE ── */
+.fbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding:12px 14px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:13px}
+.fbar label{font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap}
+.fi{background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--t1);font-family:inherit;font-size:13px;outline:none;transition:border .15s;min-width:160px}
+.fi:focus{border-color:var(--blue);background:var(--surf)}
+.fs{background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--t1);font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+.fs:focus{border-color:var(--blue)}
+.fcnt{margin-left:auto;font-size:12px;color:var(--t3);white-space:nowrap}
+.freset{background:none;border:none;color:var(--blue);font-family:inherit;font-size:12px;cursor:pointer}
+.freset:hover{text-decoration:underline}
+#rtw{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:auto;max-height:530px}
+.rmore{padding:11px;text-align:center;font-size:12px;color:var(--t3);border-top:1px solid var(--border)}
+/* URL hover expand in explore table */
+#rtw td:hover > .tp { overflow:visible; white-space:normal; word-break:break-all; background:var(--surf); position:relative; z-index:10; box-shadow:0 2px 14px rgba(0,0,0,.13); border-radius:5px; padding:5px 9px; margin:-5px -9px; }
+/* Type badge in explore */
+.type-badge{background:#f1f3f4;color:var(--t2);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap}
+
+/* ── H-BARS ── */
+.hbr{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.hbl{font-size:12px;color:var(--t1);width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbt{flex:1;height:20px;background:var(--bg);border-radius:4px;overflow:hidden}
+.hbf{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:11px;color:#fff;font-weight:600;min-width:8px}
+.hbc{font-size:12px;color:var(--t2);width:55px;text-align:right;flex-shrink:0;font-weight:500}
+
+/* ── MISC ── */
+.notice{padding:9px 13px;border-radius:6px;font-size:12px;margin-bottom:13px;background:var(--amber-l);color:var(--amber);border:1px solid #f0c040}
+.sbanner{display:flex;gap:11px;padding:13px 16px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;align-items:flex-start}
+.sbanner-text{font-size:13px;color:var(--t2);line-height:1.6}.sbanner-text strong{color:var(--t1)}
+.dbar{font-size:12px;color:var(--t3);margin-bottom:13px}
+.eff-blk{display:flex;align-items:center;gap:18px;margin-bottom:14px;padding:18px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);flex-wrap:wrap}
+.eff-score{font-size:50px;font-weight:700;line-height:1;flex-shrink:0}
+.bud-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:11px;margin-bottom:14px}
+.bud-item{padding:13px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r)}
+.bud-lbl{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.bud-val{font-size:19px;font-weight:700;margin-bottom:2px}.bud-sub{font-size:11px;color:var(--t3)}
+.ai-intro{padding:14px 18px;background:linear-gradient(135deg,#e8f0fe,#f3e8fd);border-radius:var(--r);margin-bottom:14px;border:1px solid #c5d8f8}
+.ai-intro-t{font-weight:700;font-size:15px;color:#1557b0;margin-bottom:4px}
+.ai-intro-s{font-size:13px;color:var(--t2);line-height:1.6}
+.empty{text-align:center;padding:36px;color:var(--t3)}.empty-icon{font-size:36px;margin-bottom:8px}
+.cached-note{font-size:11px;color:var(--t3);font-style:italic;padding:6px 10px;background:var(--amber-l);border-radius:5px;margin-bottom:13px;display:none}
+@media(max-width:600px){.panel{padding:13px}.kg{grid-template-columns:repeat(2,1fr)}.bg{grid-template-columns:repeat(2,1fr)}.crow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-logo"><div id="hdr-icon">📊</div><span id="hdr-name">SEO Log Analyzer</span></div>
+  <div id="hdr-div"></div>
+  <div id="hdr-meta">
+    <span id="hdr-file" style="display:none"></span>
+    <span id="hdr-ent"  style="display:none"></span>
+    <span id="hdr-dates"style="display:none"></span>
+  </div>
+  <div id="hdr-right">
+    <button class="btn-recent" id="btn-recents" style="display:none" onclick="openPanel()">📂 Recent <span class="rcount" id="rcnt"></span></button>
+    <button class="btn-ghost"  id="btn-new"     style="display:none" onclick="resetApp()">↩ New File</button>
+  </div>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen">
+  <div class="ucard" id="drop-zone"
+       onclick="document.getElementById('file-in').click()"
+       ondragover="dov(event)" ondragleave="dol()" ondrop="dod(event)">
+    <div class="u-icon">📋</div>
+    <div class="u-title">Drop your server log files here</div>
+    <div class="u-sub">Analyze how search engines, AI bots, and humans crawl your site.<br/>Supports multiple files for combined timeline analysis.</div>
+    <div class="u-fmts"><span class="fmt">.log ✓</span><span class="fmt">.txt ✓</span><span class="fmt">.gz gzip ✓</span><span class="chip c-grey" style="font-size:12px">Multiple files ✓ · up to 500 MB</span></div>
+    <button class="btn-primary" onclick="event.stopPropagation();document.getElementById('file-in').click()">Browse &amp; Upload Files</button>
+    <div class="u-hint"><strong>Format (Apache/Nginx combined log):</strong><br/><code>1.2.3.4 - - [01/Jan/2025:12:00:00 +0000] "GET /page HTTP/1.1" 200 5234 "-" "Googlebot/2.1"</code></div>
+  </div>
+  <input type="file" id="file-in" accept=".log,.txt,.gz" multiple onchange="onFileSel(event)"/>
+
+  <!-- File Queue -->
+  <div id="file-queue">
+    <div class="fq-header"><span>📂 Files to Analyze</span><span id="fq-total-size" style="font-size:12px;color:var(--t3)"></span></div>
+    <div class="fq-list" id="fq-list"></div>
+    <div class="fq-actions">
+      <button class="btn-add" onclick="document.getElementById('file-in').click()">+ Add more files</button>
+      <button class="btn-primary" id="fq-go-btn" onclick="analyzeFiles()">Analyze files →</button>
+    </div>
+  </div>
+
+  <!-- Recent Projects -->
+  <div id="recent-on-upload">
+    <div class="rou-hdr"><span class="rou-title">📂 Recent Projects <span id="rou-count" style="font-size:12px;font-weight:400;color:var(--t3)"></span></span><button class="rou-clear" onclick="clearAllProjects()">Clear all</button></div>
+    <div class="proj-grid" id="rou-grid"></div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="load-title" id="load-title">Reading file…</div>
+  <div class="prog-track"><div class="prog-bar" id="prog-bar"></div></div>
+  <div class="load-sub" id="load-sub"></div>
+  <div id="err-box"><strong>⚠ Something went wrong</strong><span id="err-msg"></span></div>
+</div>
+
+<!-- PROJECTS PANEL -->
+<div id="proj-overlay" onclick="closePanel()"></div>
+<div id="proj-panel">
+  <div class="pp-hdr"><span class="pp-title">📂 Recent Projects</span><button class="pp-close" onclick="closePanel()">✕</button></div>
+  <div class="pp-body" id="pp-body"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div id="tabs-bar">
+    <button class="ntab active" data-tab="overview" onclick="sw('overview')">📊 Summary</button>
+    <button class="ntab" data-tab="crawlers" onclick="sw('crawlers')">🤖 Crawlers</button>
+    <button class="ntab" data-tab="aibots"   onclick="sw('aibots')">🧠 AI Bots</button>
+    <button class="ntab" data-tab="pages"    onclick="sw('pages')">📄 Pages</button>
+    <button class="ntab" data-tab="budget"   onclick="sw('budget')">💰 Crawl Budget</button>
+    <button class="ntab" data-tab="issues"   onclick="sw('issues')">⚠️ Issues <span class="nb" id="ibadge"></span></button>
+    <button class="ntab" data-tab="errors"   onclick="sw('errors')">🔴 Errors</button>
+    <button class="ntab" data-tab="explore"  onclick="sw('explore')">🔍 Explore</button>
+  </div>
+
+  <div id="panel-overview" class="panel active">
+    <div id="parse-notice" class="notice" style="display:none"></div>
+    <div id="cached-note"  class="cached-note"></div>
+    <div id="dbar" class="dbar"></div>
+    <div id="sbanner" class="sbanner"></div>
+    <div class="kg" id="kpi-grid"></div>
+    <div class="card" id="tl-card"><div class="ct">Crawl Activity Over Time</div><div class="cs">Daily requests — bot vs. human. Spikes/drops can signal crawl issues.</div><canvas id="ch-timeline"></canvas></div>
+    <div class="crow">
+      <div class="card"><div class="ct">Traffic by Category</div><div class="cs">Search engines, AI bots, humans, and other crawlers</div><canvas id="ch-cat-pie"></canvas></div>
+      <div class="card"><div class="ct">HTTP Response Codes</div><div class="cs">Were pages accessible? Green = good, red = server errors</div><canvas id="ch-status"></canvas></div>
+    </div>
+  </div>
+
+  <div id="panel-crawlers" class="panel">
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">All crawlers categorized by type. <strong>Search engine bots</strong> matter most for SEO. <strong>AI bots</strong> are growing in importance for brand awareness.</p>
+    <div class="cat-overview" id="cat-overview"></div>
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div id="human-card-wrap"></div>
+    <div class="bg" id="bot-grid"></div>
+    <div class="crow">
+      <div class="card"><div class="ct">Requests by Crawler</div><canvas id="ch-bots" style="max-height:260px"></canvas></div>
+      <div class="card"><div class="ct">Bandwidth by Crawler</div><div class="cs">Which bots consume the most server bandwidth?</div><canvas id="ch-bots-bw" style="max-height:220px"></canvas></div>
+    </div>
+  </div>
+
+  <div id="panel-aibots" class="panel">
+    <div class="ai-intro"><div class="ai-intro-t">🧠 AI Bot Activity</div><div class="ai-intro-s">AI tools like ChatGPT, Perplexity, and Claude crawl your site to answer user questions. Understanding which pages they visit helps you optimize for AI-powered search.</div></div>
+    <div class="kg" id="ai-kpis"></div>
+    <div class="bg" id="ai-bot-grid"></div>
+    <div class="card"><div class="ct">Pages Most Visited by AI Bots</div><div class="cs">These pages are being read by AI tools to learn about your site</div>
+      <div class="tw"><table id="tbl-ai"><thead><tr><th>#</th><th>Page URL</th><th class="r">AI Crawls</th><th>Bots Seen</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="panel-pages" class="panel">
+    <div class="crow">
+      <div class="card"><div class="ct">File Types Being Crawled</div><div class="cs">What types of content are bots spending time on?</div><div id="ft-bars"></div></div>
+      <div class="card"><div class="ct">Top Directories Crawled</div><div class="cs">Which site sections get the most crawler attention?</div><div id="dir-bars"></div></div>
+    </div>
+    <div class="card"><div class="ct">Top Pages — All Traffic</div>
+      <div class="tw"><table id="tbl-pages"><thead><tr><th>#</th><th>URL</th><th class="r">Total</th><th class="r">Bot Hits</th><th class="r">Share</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card"><div class="ct">Top Bot-Crawled Pages</div><div class="cs">Are these your most important pages? If not, crawl budget may be misallocated.</div>
+      <div class="tw"><table id="tbl-botpages"><thead><tr><th>#</th><th>URL</th><th class="r">Crawls</th><th>Crawlers</th><th>Responses</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="panel-budget" class="panel">
+    <div style="font-size:13px;color:var(--t2);margin-bottom:14px;padding:13px 15px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);line-height:1.7"><strong style="color:var(--t1)">What is Crawl Budget?</strong> Search engines spend limited time crawling your site. Budget wasted on errors, redirects, or low-value pages means important content may not get indexed.</div>
+    <div id="eff-blk"></div>
+    <div class="bud-grid" id="bud-grid"></div>
+    <div class="crow">
+      <div class="card"><div class="ct">Crawl by Response Type</div><canvas id="ch-bud-status" style="max-height:200px"></canvas></div>
+      <div class="card"><div class="ct">Crawl by File Type</div><canvas id="ch-bud-type" style="max-height:200px"></canvas></div>
+    </div>
+    <div class="card"><div class="ct">🔗 Parameter URLs Wasting Crawl Budget</div><div class="cs">URLs with ?parameters= that bots crawl — often duplicate content. Block via robots.txt or add canonical tags.</div>
+      <div class="tw"><table id="tbl-params"><thead><tr><th>#</th><th>URL</th><th class="r">Bot Hits</th><th>Crawler</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card"><div class="ct">🔄 Top Redirect URLs</div><div class="cs">Redirected pages waste crawl budget. Update internal links to point to the final URL.</div>
+      <div class="tw"><table id="tbl-redirs"><thead><tr><th>#</th><th>URL</th><th class="r">Hits</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="panel-issues" class="panel">
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">Auto-detected SEO issues. Fix <strong style="color:var(--red)">Critical</strong> items first — they directly impact how search engines crawl and index your site. Click <strong>↗ Check</strong> to see affected URLs.</p>
+    <div class="kg" id="issues-kpis" style="margin-bottom:18px"></div>
+    <div class="il" id="issues-list"></div>
+  </div>
+
+  <!-- ERRORS TAB -->
+  <div id="panel-errors" class="panel">
+    <!-- Non-zero error code cards (clickable → scroll) -->
+    <div class="err-code-grid" id="err-code-grid"></div>
+
+    <div class="crow">
+      <!-- Error distribution chart -->
+      <div class="card"><div class="ct">Error Code Breakdown</div><canvas id="ch-err" style="max-height:220px"></canvas></div>
+      <!-- Errors by Crawler — interactive HTML bars with multi-select -->
+      <div class="card" id="err-bot-card">
+        <div class="ct">Errors by Crawler <span id="err-bot-filter-hint" style="font-size:11px;font-weight:400;color:var(--t3)">— click a bar to filter below</span></div>
+        <div class="err-bot-wrap">
+          <div class="err-bot-filter-bar" id="err-bot-filter-bar" style="display:none">
+            <span style="font-size:12px;font-weight:500;color:var(--t2)">Filtered by:</span>
+            <div id="err-bot-chips"></div>
+            <button class="err-clear-btn" onclick="clearErrBotFilter()">✕ Clear filter</button>
+          </div>
+          <div id="err-bot-bars"></div>
+          <button class="show-more-btn" id="err-bot-more-btn" style="display:none" onclick="showMoreErrBots()"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 404 section -->
+    <div class="card err-section-anchor" id="err-sec-404">
+      <div class="ct">Top 404 Pages — Not Found</div>
+      <div class="cs">Pages that don't exist. Set up 301 redirects or fix internal links pointing here.</div>
+      <div class="tw"><table id="tbl-404"><thead><tr><th>#</th><th>URL</th><th class="r">Hits</th><th>Bots</th></tr></thead><tbody></tbody></table></div>
+      <button class="show-more-btn" id="btn-more-404" style="display:none" onclick="showMore404()"></button>
+    </div>
+
+    <!-- 5xx section -->
+    <div class="card err-section-anchor" id="err-sec-5xx" style="margin-top:13px">
+      <div class="ct">Top 5xx Server Errors</div>
+      <div class="cs">Server errors prevent bots from accessing your content. Fix these urgently.</div>
+      <div class="tw"><table id="tbl-5xx"><thead><tr><th>#</th><th>URL</th><th class="r">Errors</th><th>Codes</th><th>Bots</th></tr></thead><tbody></tbody></table></div>
+      <button class="show-more-btn" id="btn-more-5xx" style="display:none" onclick="showMore5xx()"></button>
+    </div>
+
+    <!-- Other status sections rendered dynamically -->
+    <div id="err-other-sections"></div>
+  </div>
+
+  <div id="panel-explore" class="panel">
+    <div class="fbar">
+      <label>URL</label><input class="fi" id="f-path" placeholder="Filter by URL path…" oninput="renderExplore()"/>
+      <label>Crawler</label><select class="fs" id="f-bot" onchange="renderExplore()"><option value="">All crawlers</option></select>
+      <label>Status</label>
+      <select class="fs" id="f-status" onchange="renderExplore()">
+        <option value="">All</option><option value="2">2xx OK</option><option value="3">3xx Redirect</option><option value="4">4xx Error</option><option value="5">5xx Server Error</option>
+      </select>
+      <label>Method</label>
+      <select class="fs" id="f-method" onchange="renderExplore()"><option value="">All</option><option>GET</option><option>POST</option><option>HEAD</option></select>
+      <label>Type</label>
+      <select class="fs" id="f-type" onchange="renderExplore()">
+        <option value="">All</option><option>HTML</option><option>Image</option><option>CSS</option><option>JavaScript</option><option>XML</option><option>JSON</option><option>Font</option><option>PDF</option>
+      </select>
+      <select class="fs" id="f-traffic" onchange="renderExplore()">
+        <option value="bots">Bots only</option><option value="all">All traffic</option><option value="human">Humans only</option>
+      </select>
+      <span class="fcnt" id="exp-cnt"></span>
+      <button class="freset" onclick="resetFilters()">Reset</button>
+      <button class="btn-ghost" onclick="exportCSV()" style="font-size:12px;padding:5px 10px">⬇ CSV</button>
+    </div>
+    <div id="rtw">
+      <table>
+        <thead><tr><th>IP</th><th>Date/Time</th><th>Method</th><th>Type</th><th>URL Path</th><th>Status</th><th>Size</th><th>Category</th><th>Crawler</th></tr></thead>
+        <tbody id="exp-tbody"></tbody>
+      </table>
+    </div>
+    <div id="exp-more" class="rmore" style="display:none"></div>
+  </div>
+</div><!-- /dashboard -->
+
+<script>
+// ═══════════════════════════════════════════
+// BOT DEFINITIONS
+// ═══════════════════════════════════════════
+var BOT_LIST = [
+  ['Googlebot','#4285F4','Search Engine'],['Googlebot-Image','#34A853','Search Engine'],
+  ['Googlebot-Video','#FBBC04','Search Engine'],['Google-InspectionTool','#4285F4','Search Engine'],
+  ['AdsBot-Google','#EA4335','Search Engine'],['google-xrawler','#4285F4','Search Engine'],
+  ['bingbot','#00897B','Search Engine'],['BingPreview','#26A69A','Search Engine'],
+  ['adidxbot','#26A69A','Search Engine'],['YandexBot','#FF6D00','Search Engine'],
+  ['YandexImages','#FF8C00','Search Engine'],['Baiduspider','#E53935','Search Engine'],
+  ['DuckDuckBot','#DE5833','Search Engine'],['Slurp','#720E9E','Search Engine'],
+  ['Applebot','#888888','Search Engine'],['PetalBot','#06b6d4','Search Engine'],
+  ['ChatGPT-User','#10a37f','AI Bot'],['OAI-SearchBot','#10a37f','AI Bot'],
+  ['GPTBot','#10a37f','AI Bot'],['anthropic-ai','#cc785c','AI Bot'],
+  ['ClaudeBot','#cc785c','AI Bot'],['PerplexityBot','#7c3aed','AI Bot'],
+  ['YouBot','#0070f3','AI Bot'],['Amazonbot','#FF9900','AI Bot'],
+  ['DiffBot','#6b7280','AI Bot'],['CCBot','#6b7280','AI Bot'],['Bytespider','#1E88E5','AI Bot'],
+  ['Chrome-Lighthouse','#F9AB00','SEO Tool'],['AhrefsBot','#00D4AA','SEO Tool'],
+  ['AhrefsSiteAudit','#00D4AA','SEO Tool'],['Semrushbot','#FF6B35','SEO Tool'],
+  ['MJ12bot','#9C27B0','SEO Tool'],['DotBot','#607D8B','SEO Tool'],
+  ['rogerbot','#3b82f6','SEO Tool'],['SeznamBot','#CC0000','SEO Tool'],
+  ['brokenlinkcheck','#f59e0b','SEO Tool'],
+  ['facebookexternalhit','#1877F2','Social'],['Twitterbot','#1DA1F2','Social'],
+  ['LinkedInBot','#0A66C2','Social'],['Pinterestbot','#E60023','Social'],
+  ['Slackbot','#4A154B','Social'],['Discordbot','#5865F2','Social'],
+  ['Python','#3776AB','Script'],['python-requests','#3776AB','Script'],
+  ['aiohttp','#3776AB','Script'],['curl','#073551','Script'],
+  ['Scrapy','#60A917','Script'],['Magento','#F46F25','Script'],
+  ['archive.org_bot','#8b949e','Archive'],['ia_archiver','#8b949e','Archive'],
+];
+var CAT_META = {
+  'Search Engine':{color:'#1a73e8',icon:'🔍'},'AI Bot':{color:'#10a37f',icon:'🧠'},
+  'SEO Tool':{color:'#f59e0b',icon:'🔧'},'Social':{color:'#e91e63',icon:'📱'},
+  'Script':{color:'#6b7280',icon:'💻'},'Archive':{color:'#9aa0a6',icon:'🗃️'},'Other Bot':{color:'#bbb',icon:'🤖'},
+};
+var AI_BOTS = ['ChatGPT-User','OAI-SearchBot','GPTBot','anthropic-ai','ClaudeBot','PerplexityBot','YouBot','Amazonbot','DiffBot','CCBot','Bytespider'];
+var MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+
+function getBotColor(n){for(var i=0;i<BOT_LIST.length;i++){if(BOT_LIST[i][0]===n)return BOT_LIST[i][1];}return '#9aa0a6';}
+function getBotCat(n){for(var i=0;i<BOT_LIST.length;i++){if(BOT_LIST[i][0]===n)return BOT_LIST[i][2];}return 'Other Bot';}
+function isAI(n){if(!n)return false;for(var i=0;i<AI_BOTS.length;i++){if(n.toLowerCase().indexOf(AI_BOTS[i].toLowerCase())!==-1)return true;}return false;}
+function detectBot(ua){
+  if(!ua)return null;
+  var uaL=ua.toLowerCase();
+  for(var i=0;i<BOT_LIST.length;i++){if(uaL.indexOf(BOT_LIST[i][0].toLowerCase())!==-1)return BOT_LIST[i][0];}
+  if(/bot|crawl|spider|slurp|fetch|checker|scan|archiver/i.test(ua))return 'Other Bot';
+  return null;
+}
+
+// ═══════════════════════════════════════════
+// PARSERS & FORMATTERS
+// ═══════════════════════════════════════════
+var LOG_RE=/^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"([^"]*?)"\s+(\d{3})\s+(\S+)(?:\s+"[^"]*")?(?:\s+"([^"]*)")?/;
+function parseLine(line){
+  var m=line.match(LOG_RE);if(!m)return null;
+  var parts=(m[3]||'').split(' ');
+  return{ip:m[1],datetime:m[2],method:parts[0]||'-',path:parts[1]||'/',status:parseInt(m[4])||0,bytes:m[5]==='-'?0:(parseInt(m[5])||0),ua:m[6]||''};
+}
+function parseDate(dt){
+  var m=dt.match(/(\d+)\/(\w{3})\/(\d+):(\d+):(\d+):(\d+)/);
+  if(!m)return null;var mon=MONTHS[m[2]];if(mon===undefined)return null;
+  return new Date(Date.UTC(+m[3],mon,+m[1],+m[4],+m[5],+m[6]));
+}
+function sg(code){if(code>=200&&code<300)return'2xx';if(code>=300&&code<400)return'3xx';if(code>=400&&code<500)return'4xx';if(code>=500)return'5xx';return'other';}
+function fileType(path){
+  var p=(path||'').split('?')[0].split('#')[0];var ext=p.split('.').pop().toLowerCase();
+  var m={html:'HTML',htm:'HTML',php:'HTML',asp:'HTML',aspx:'HTML',jsp:'HTML',
+    jpg:'Image',jpeg:'Image',png:'Image',gif:'Image',svg:'Image',webp:'Image',ico:'Image',
+    css:'CSS',js:'JavaScript',mjs:'JavaScript',json:'JSON',xml:'XML',rss:'XML',atom:'XML',
+    pdf:'PDF',woff:'Font',woff2:'Font',ttf:'Font',eot:'Font'};
+  if(m[ext])return m[ext];
+  if(!p.includes('.')||p.endsWith('/')||ext.length>6)return'HTML';return'Other';
+}
+function topDir(path){
+  var p=(path||'').split('?')[0];var parts=p.split('/').filter(Boolean);
+  if(!parts.length)return'/';return'/'+parts[0]+(parts.length>1?'/…':'');
+}
+function fmtBytes(b){if(!b)return'0 B';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';if(b<1073741824)return(b/1048576).toFixed(2)+' MB';return(b/1073741824).toFixed(2)+' GB';}
+function fmtN(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':String(n);}
+function pct(a,b){return b?((a/b)*100).toFixed(1)+'%':'0%';}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function schip(code){
+  var g=sg(code);var cn=g==='2xx'?'c-green':g==='3xx'?'c-blue':g==='4xx'?'c-amber':g==='5xx'?'c-red':'c-grey';
+  return'<span class="chip '+cn+'" style="font-family:\'DM Mono\',monospace;font-size:11px;padding:2px 6px">'+code+'</span>';
+}
+function bchip(bot){var c=getBotColor(bot);return'<span style="background:'+c+'20;color:'+c+';border:1px solid '+c+'40;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">'+esc(bot)+'</span>';}
+function catChip(cat){var m=CAT_META[cat]||CAT_META['Other Bot'];return'<span style="background:'+m.color+'18;color:'+m.color+';border:1px solid '+m.color+'35;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">'+m.icon+' '+esc(cat)+'</span>';}
+function typeBadge(t){return t&&t!=='-'?'<span class="type-badge">'+esc(t)+'</span>':'-';}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+var G = {parsed:[],analytics:null,fileName:'',errors:0,lines:[],idx:0,isFromCache:false};
+var G_FILES = []; // queued files
+var CHARTS = {};
+var CHUNK = 15000;
+var _activeCatFilter = 'All';
+var _filtered = [];
+// Error tab state
+var _errBotFilter = [];  // selected bot names
+var _err404Limit = 10;
+var _err5xxLimit = 10;
+var _errBotLimit = 10;
+
+// ═══════════════════════════════════════════
+// MULTI-FILE QUEUE
+// ═══════════════════════════════════════════
+function dov(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag');}
+function dol(){document.getElementById('drop-zone').classList.remove('drag');}
+function dod(e){e.preventDefault();dol();addFiles(Array.from(e.dataTransfer.files));}
+function onFileSel(e){addFiles(Array.from(e.target.files));}
+
+function addFiles(files){
+  files.forEach(function(f){G_FILES.push(f);});
+  renderQueue();
+}
+function removeQFile(i){G_FILES.splice(i,1);renderQueue();}
+function renderQueue(){
+  var q=document.getElementById('file-queue');
+  if(!G_FILES.length){q.style.display='none';return;}
+  q.style.display='block';
+  var totalBytes=G_FILES.reduce(function(s,f){return s+f.size;},0);
+  document.getElementById('fq-total-size').textContent=fmtBytes(totalBytes)+' total';
+  document.getElementById('fq-list').innerHTML=G_FILES.map(function(f,i){
+    return'<div class="fq-item">' +
+      '<span class="fq-icon">'+(f.name.endsWith('.gz')?'📦':'📄')+'</span>' +
+      '<span class="fq-name" title="'+esc(f.name)+'">'+esc(f.name)+'</span>' +
+      '<span class="fq-size">'+fmtBytes(f.size)+'</span>' +
+      '<button class="fq-del" onclick="removeQFile('+i+')" title="Remove">✕</button>' +
+    '</div>';
+  }).join('');
+  document.getElementById('fq-go-btn').textContent='Analyze '+G_FILES.length+' file'+(G_FILES.length>1?'s':'')+' →';
+}
+
+// ═══════════════════════════════════════════
+// FILE READING
+// ═══════════════════════════════════════════
+function analyzeFiles(){
+  if(!G_FILES.length)return;
+  showScreen('loading');
+  var fileName=G_FILES.length===1?G_FILES[0].name:G_FILES.length+' files ('+G_FILES.map(function(f){return f.name;}).join(', ')+'...'.slice(0,60)+')';
+  G={parsed:[],analytics:null,fileName:G_FILES.length===1?G_FILES[0].name:G_FILES.length+' files',errors:0,lines:[],idx:0,isFromCache:false};
+  setP('Reading files…',5,'');
+  readFilesSeq(G_FILES,0,[]);
+}
+
+function readFilesSeq(files,idx,allLines){
+  if(idx>=files.length){
+    G.lines=allLines;G.idx=0;G.parsed=[];G.errors=0;
+    setP('Parsing…',35,fmtN(allLines.length)+' total lines');
+    setTimeout(parseChunk,0);
+    return;
+  }
+  var file=files[idx];
+  setP('Reading file '+(idx+1)+' of '+files.length+': '+file.name,Math.round(5+idx/files.length*30),fmtN(allLines.length)+' lines so far');
+  var isGz=/\.gz$/i.test(file.name)||file.type==='application/gzip';
+  function gotText(text){
+    var lines=text.split('\n');
+    for(var i=0;i<lines.length;i++)allLines.push(lines[i]);
+    setTimeout(function(){readFilesSeq(files,idx+1,allLines);},0);
+  }
+  if(isGz){
+    var gzR=new FileReader();
+    gzR.onerror=function(){showErr('Could not read '+file.name);};
+    gzR.onload=function(e){
+      if(typeof DecompressionStream==='undefined'){showErr('Browser does not support gzip. Extract '+file.name+' first.');return;}
+      var ds=new DecompressionStream('gzip');var w=ds.writable.getWriter();
+      w.write(new Uint8Array(e.target.result));w.close();
+      new Response(ds.readable).text().then(gotText).catch(function(err){showErr('Decompress failed for '+file.name+': '+err.message);});
+    };
+    gzR.readAsArrayBuffer(file);
+  }else{
+    var txR=new FileReader();
+    txR.onerror=function(){showErr('Could not read '+file.name);};
+    txR.onload=function(e){gotText(e.target.result);};
+    txR.readAsText(file);
+  }
+}
+
+function setP(title,p,sub){
+  document.getElementById('load-title').textContent=title;
+  document.getElementById('prog-bar').style.width=p+'%';
+  if(sub!==undefined)document.getElementById('load-sub').textContent=sub;
+}
+function showErr(msg){
+  document.getElementById('err-box').style.display='block';
+  document.getElementById('err-msg').textContent=msg;
+  document.getElementById('load-title').textContent='Error processing file';
+}
+
+function parseChunk(){
+  try{
+    var lines=G.lines,end=Math.min(G.idx+CHUNK,lines.length);
+    for(var i=G.idx;i<end;i++){
+      var line=lines[i];if(!line||!line.trim())continue;
+      var r=parseLine(line.trim());
+      if(!r){G.errors++;continue;}
+      r.bot=detectBot(r.ua);G.parsed.push(r);
+    }
+    G.idx=end;
+    var p=Math.round(35+(G.idx/lines.length)*55);
+    setP('Parsing…',p,fmtN(G.idx)+' / '+fmtN(lines.length)+' lines');
+    if(G.idx<lines.length){setTimeout(parseChunk,0);}
+    else{setP('Building analytics…',94,'Almost done…');setTimeout(finalize,30);}
+  }catch(err){showErr('Parse error: '+err.message);}
+}
+
+function finalize(){
+  try{
+    G.analytics=buildAnalytics(G.parsed);
+    saveProject(G.analytics,G.fileName);
+    setP('Rendering…',99,'');setTimeout(renderAll,20);
+  }catch(err){showErr('Analytics error: '+err.message);}
+}
+
+// ═══════════════════════════════════════════
+// RECENT PROJECTS — localStorage
+// ═══════════════════════════════════════════
+var PK='sla-projects',PDK='sla-pdata-';
+
+function getProjects(){try{return JSON.parse(localStorage.getItem(PK)||'[]');}catch(e){return[];}}
+
+function autoName(fileName,dr){
+  var base=(fileName||'Log').replace(/\.(gz|log|txt)$/gi,'').replace(/[-_]+/g,'.').replace(/\.$/,'').slice(0,48);
+  if(!base||base.length<2)base='Log Analysis';
+  var suffix=dr&&dr.start?' ('+dr.start+')':' — '+new Date().toLocaleDateString();
+  return base+suffix;
+}
+
+function saveProject(analytics,fileName){
+  try{
+    var projects=getProjects();
+    var id=String(Date.now());
+    var name=autoName(fileName,analytics.dateRange);
+    var meta={id:id,name:name,fileName:fileName,dateAdded:new Date().toISOString(),
+      stats:{total:analytics.total,botTotal:analytics.botTotal,humanTotal:analytics.humanTotal,
+        aiTotal:analytics.aiTotal,eff:analytics.eff,dateRange:analytics.dateRange}};
+    projects.unshift(meta);
+    if(projects.length>12)projects=projects.slice(0,12);
+    localStorage.setItem(PK,JSON.stringify(projects));
+
+    // Store analytics data (strip raw arrays, limit large objects)
+    var bpdKeys=Object.keys(analytics.bpd).slice(0,200);
+    var bpdSlim={};bpdKeys.forEach(function(k){bpdSlim[k]=analytics.bpd[k];});
+    var data={
+      botBreakdown:analytics.botBreakdown,aiBreakdown:analytics.aiBreakdown,aiPages:analytics.aiPages,
+      catTotals:analytics.catTotals,stG:analytics.stG,stC:analytics.stC,bstG:analytics.bstG,
+      topPaths:analytics.topPaths,topBotPaths:analytics.topBotPaths,bpd:bpdSlim,
+      ftA:analytics.ftA,ftB:analytics.ftB,topDirs:analytics.topDirs,
+      paramUrls:analytics.paramUrls,paramTotal:analytics.paramTotal,topRedir:analytics.topRedir,
+      top404:analytics.top404,top5xx:analytics.top5xx,eBot:analytics.eBot,
+      eBot404:analytics.eBot404,eBot5xx:analytics.eBot5xx,
+      dailyArr:analytics.dailyArr,dateRange:analytics.dateRange,
+      eff:analytics.eff,botOK:analytics.botOK,
+      total:analytics.total,botTotal:analytics.botTotal,humanTotal:analytics.humanTotal,aiTotal:analytics.aiTotal,
+      uniqIPs:analytics.uniqIPs,uniqPaths:analytics.uniqPaths,totalBytes:analytics.totalBytes,botBytes:analytics.botBytes,
+      humanUniqPaths:analytics.humanUniqPaths,humanBytes:analytics.humanBytes,
+      _explore:analytics.all.slice(0,1500)
+    };
+    try{localStorage.setItem(PDK+id,JSON.stringify(data));}
+    catch(e2){
+      // Too large — store without explore data
+      delete data._explore;
+      try{localStorage.setItem(PDK+id,JSON.stringify(data));}catch(e3){}
+    }
+  }catch(e){}
+}
+
+function loadProjectData(id){
+  try{
+    var raw=localStorage.getItem(PDK+id);if(!raw)return null;
+    var data=JSON.parse(raw);
+    data.all=data._explore||[];
+    data.bots=(data._explore||[]).filter(function(l){return l.bot;});
+    delete data._explore;
+    if(!data.eBot404)data.eBot404={};
+    if(!data.eBot5xx)data.eBot5xx={};
+    return data;
+  }catch(e){return null;}
+}
+
+function openProject(id){
+  var projects=getProjects();
+  var meta=null;
+  for(var i=0;i<projects.length;i++){if(projects[i].id===id){meta=projects[i];break;}}
+  if(!meta)return;
+  var data=loadProjectData(id);
+  if(!data){alert('No analysis data saved for this project. Please re-upload the log file.');return;}
+  closePanel();
+  G.analytics=data;
+  G.fileName=meta.fileName;
+  G.errors=0;
+  G.isFromCache=true;
+  showScreen('loading');
+  setP('Loading project…',80,'Restoring analysis from cache');
+  setTimeout(function(){
+    setP('Rendering…',99,'');setTimeout(renderAll,20);
+  },100);
+}
+
+function deleteProject(id,e){
+  if(e)e.stopPropagation();
+  try{
+    var projects=getProjects().filter(function(p){return p.id!==id;});
+    localStorage.setItem(PK,JSON.stringify(projects));
+    try{localStorage.removeItem(PDK+id);}catch(ex){}
+    renderProjPanel();renderRecentUpload();updateRecentBtn();
+  }catch(err){}
+}
+function clearAllProjects(){
+  if(!confirm('Remove all recent projects?'))return;
+  try{
+    var projects=getProjects();
+    projects.forEach(function(p){try{localStorage.removeItem(PDK+p.id);}catch(ex){}});
+    localStorage.removeItem(PK);
+  }catch(e){}
+  renderRecentUpload();updateRecentBtn();
+}
+
+function projCardHTML(p,forPanel){
+  var s=p.stats||{};
+  var botPct=s.total?Math.round((s.botTotal||0)/s.total*100):0;
+  var effColor=(s.eff||0)>=80?'var(--green)':(s.eff||0)>=60?'var(--amber)':'var(--red)';
+  var dr=s.dateRange&&s.dateRange.start?s.dateRange.start+' → '+s.dateRange.end:'—';
+  var hasData=!!localStorage.getItem(PDK+p.id);
+  if(forPanel){
+    return'<div class="pp-item" onclick="openProject(\''+p.id+'\')">' +
+      '<button class="pp-del" onclick="deleteProject(\''+p.id+'\',event)" title="Remove">✕</button>' +
+      '<div class="pp-item-name">'+esc(p.name)+'</div>' +
+      '<div class="pp-item-file">📄 '+esc(p.fileName)+'</div>' +
+      '<div class="pp-item-row">' +
+        '<span class="pp-stat"><strong>'+fmtN(s.total||0)+'</strong> reqs</span>' +
+        '<span class="pp-stat"><strong>'+botPct+'%</strong> bots</span>' +
+        '<span class="pp-stat" style="color:'+effColor+'"><strong>'+(s.eff||0)+'%</strong> eff</span>' +
+      '</div>' +
+      '<div class="pp-item-date">'+dr+' · '+new Date(p.dateAdded).toLocaleDateString()+'</div>' +
+      (hasData?'':'<div class="pp-item-no-data">⚠ No cached data — re-upload to view</div>') +
+    '</div>';
+  }else{
+    return'<div class="proj-card" onclick="openProject(\''+p.id+'\')">' +
+      '<button class="proj-card-del" onclick="deleteProject(\''+p.id+'\',event)" title="Remove">✕</button>' +
+      '<div class="proj-card-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div>' +
+      '<div class="proj-card-file">'+esc(p.fileName)+'</div>' +
+      '<div class="proj-card-stats">' +
+        '<span class="pcs"><strong>'+fmtN(s.total||0)+'</strong> reqs</span>' +
+        '<span class="pcs"><strong>'+botPct+'%</strong> bots</span>' +
+        '<span class="pcs" style="color:'+effColor+'"><strong>'+(s.eff||0)+'%</strong> eff.</span>' +
+      '</div>' +
+      '<div class="proj-card-date">'+new Date(p.dateAdded).toLocaleDateString()+(s.dateRange&&s.dateRange.start?' · '+s.dateRange.start:'')+'</div>' +
+      (hasData?'':'<div class="proj-card-no-data">⚠ Re-upload to view details</div>') +
+    '</div>';
+  }
+}
+
+function renderProjPanel(){
+  var projects=getProjects();var body=document.getElementById('pp-body');
+  if(!projects.length){body.innerHTML='<div class="pp-empty"><div style="font-size:40px;margin-bottom:10px">📭</div>No recent projects yet.</div>';return;}
+  body.innerHTML=projects.map(function(p){return projCardHTML(p,true);}).join('');
+}
+function renderRecentUpload(){
+  var projects=getProjects();var wrap=document.getElementById('recent-on-upload');
+  if(!projects.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  document.getElementById('rou-count').textContent='('+projects.length+')';
+  document.getElementById('rou-grid').innerHTML=projects.slice(0,6).map(function(p){return projCardHTML(p,false);}).join('');
+}
+function updateRecentBtn(){
+  var projects=getProjects();var btn=document.getElementById('btn-recents');
+  if(projects.length){btn.style.display='flex';document.getElementById('rcnt').textContent=projects.length;}
+  else btn.style.display='none';
+}
+function openPanel(){renderProjPanel();document.getElementById('proj-overlay').style.display='block';document.getElementById('proj-panel').classList.add('open');}
+function closePanel(){document.getElementById('proj-overlay').style.display='none';document.getElementById('proj-panel').classList.remove('open');}
+
+// ═══════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════
+function buildAnalytics(logs){
+  var bots=logs.filter(function(l){return l.bot;});
+  var humans=logs.filter(function(l){return !l.bot;});
+  var aiLogs=bots.filter(function(l){return isAI(l.bot);});
+
+  var bc={},bb={},bu={};
+  bots.forEach(function(l){bc[l.bot]=(bc[l.bot]||0)+1;bb[l.bot]=(bb[l.bot]||0)+l.bytes;if(!bu[l.bot])bu[l.bot]={};bu[l.bot][l.path]=1;});
+  var botBreakdown=Object.keys(bc).sort(function(a,b){return bc[b]-bc[a];}).map(function(n){
+    return{name:n,count:bc[n],bytes:bb[n]||0,uniq:Object.keys(bu[n]||{}).length,color:getBotColor(n),category:getBotCat(n)};
+  });
+
+  var catTotals={};
+  botBreakdown.forEach(function(b){catTotals[b.category]=(catTotals[b.category]||0)+b.count;});
+  catTotals['Human']=humans.length;
+
+  var ac={},au={};
+  aiLogs.forEach(function(l){ac[l.bot]=(ac[l.bot]||0)+1;if(!au[l.bot])au[l.bot]={};au[l.bot][l.path]=1;});
+  var aiBreakdown=Object.keys(ac).sort(function(a,b){return ac[b]-ac[a];}).map(function(n){
+    return{name:n,count:ac[n],uniq:Object.keys(au[n]||{}).length,color:getBotColor(n)};
+  });
+
+  var apc={},apb={};
+  aiLogs.forEach(function(l){apc[l.path]=(apc[l.path]||0)+1;if(!apb[l.path])apb[l.path]={};apb[l.path][l.bot]=(apb[l.path][l.bot]||0)+1;});
+  var aiPages=Object.keys(apc).sort(function(a,b){return apc[b]-apc[a];}).slice(0,25).map(function(p){return{path:p,count:apc[p],bots:apb[p]};});
+
+  var stG={},stC={},bstG={};
+  logs.forEach(function(l){var g=sg(l.status);stG[g]=(stG[g]||0)+1;stC[l.status]=(stC[l.status]||0)+1;});
+  bots.forEach(function(l){var g=sg(l.status);bstG[g]=(bstG[g]||0)+1;});
+
+  var pc={},bpc={},bpd={};
+  logs.forEach(function(l){pc[l.path]=(pc[l.path]||0)+1;});
+  bots.forEach(function(l){
+    bpc[l.path]=(bpc[l.path]||0)+1;
+    if(!bpd[l.path])bpd[l.path]={total:0,bots:{},statuses:{}};
+    bpd[l.path].total++;bpd[l.path].bots[l.bot]=(bpd[l.path].bots[l.bot]||0)+1;
+    bpd[l.path].statuses[l.status]=(bpd[l.path].statuses[l.status]||0)+1;
+  });
+  var topPaths=Object.keys(pc).sort(function(a,b){return pc[b]-pc[a];}).slice(0,30).map(function(p){return{path:p,count:pc[p],bot:bpc[p]||0};});
+  var topBotPaths=Object.keys(bpc).sort(function(a,b){return bpc[b]-bpc[a];}).slice(0,30).map(function(p){return{path:p,count:bpc[p]};});
+
+  var ftA={},ftB={},dB={};
+  logs.forEach(function(l){var t=fileType(l.path);ftA[t]=(ftA[t]||0)+1;});
+  bots.forEach(function(l){var t=fileType(l.path);ftB[t]=(ftB[t]||0)+1;var d=topDir(l.path);dB[d]=(dB[d]||0)+1;});
+  var topDirs=Object.keys(dB).sort(function(a,b){return dB[b]-dB[a];}).slice(0,12).map(function(d){return{dir:d,count:dB[d]};});
+
+  var paramC={},paramBot={};
+  bots.filter(function(l){return l.path&&l.path.indexOf('?')!==-1;}).forEach(function(l){paramC[l.path]=(paramC[l.path]||0)+1;paramBot[l.path]=l.bot;});
+  var paramUrls=Object.keys(paramC).sort(function(a,b){return paramC[b]-paramC[a];}).slice(0,50).map(function(p){return{path:p,count:paramC[p],bot:paramBot[p]};});
+  var paramTotal=paramUrls.reduce(function(s,p){return s+p.count;},0);
+
+  var rdC={},rdS={};
+  bots.filter(function(l){return l.status>=300&&l.status<400;}).forEach(function(l){rdC[l.path]=(rdC[l.path]||0)+1;rdS[l.path]=l.status;});
+  var topRedir=Object.keys(rdC).sort(function(a,b){return rdC[b]-rdC[a];}).slice(0,20).map(function(p){return{path:p,count:rdC[p],status:rdS[p]};});
+
+  // 404 per bot for filtering
+  var e404={},e5xx={},eBot={},eBot404={},eBot5xx={};
+  logs.filter(function(l){return l.status===404;}).forEach(function(l){e404[l.path]=(e404[l.path]||0)+1;});
+  logs.filter(function(l){return l.status>=500;}).forEach(function(l){
+    if(!e5xx[l.path])e5xx[l.path]={count:0,codes:{}};
+    e5xx[l.path].count++;e5xx[l.path].codes[l.status]=(e5xx[l.path].codes[l.status]||0)+1;
+  });
+  bots.filter(function(l){return l.status===404;}).forEach(function(l){
+    if(!eBot404[l.bot])eBot404[l.bot]={};
+    eBot404[l.bot][l.path]=(eBot404[l.bot][l.path]||0)+1;
+  });
+  bots.filter(function(l){return l.status>=500;}).forEach(function(l){
+    if(!eBot5xx[l.bot])eBot5xx[l.bot]={};
+    eBot5xx[l.bot][l.path]=(eBot5xx[l.bot][l.path]||0)+1;
+  });
+  bots.filter(function(l){return l.status>=400;}).forEach(function(l){eBot[l.bot]=(eBot[l.bot]||0)+1;});
+
+  // 404 bots per path
+  var e404Bots={};
+  bots.filter(function(l){return l.status===404;}).forEach(function(l){
+    if(!e404Bots[l.path])e404Bots[l.path]={};
+    e404Bots[l.path][l.bot]=(e404Bots[l.path][l.bot]||0)+1;
+  });
+  var e5xxBots={};
+  bots.filter(function(l){return l.status>=500;}).forEach(function(l){
+    if(!e5xxBots[l.path])e5xxBots[l.path]={};
+    e5xxBots[l.path][l.bot]=(e5xxBots[l.path][l.bot]||0)+1;
+  });
+
+  var top404=Object.keys(e404).sort(function(a,b){return e404[b]-e404[a];}).slice(0,50).map(function(p){return{path:p,count:e404[p],bots:e404Bots[p]||{}};});
+  var top5xx=Object.keys(e5xx).sort(function(a,b){return e5xx[b].count-e5xx[a].count;}).slice(0,30).map(function(p){return Object.assign({path:p,bots:e5xxBots[p]||{}},e5xx[p]);});
+
+  // Compact eBot404/eBot5xx (top 20 paths per bot)
+  var compBot404={};Object.keys(eBot404).forEach(function(bot){
+    var paths=Object.keys(eBot404[bot]).sort(function(a,b){return eBot404[bot][b]-eBot404[bot][a];}).slice(0,20);
+    compBot404[bot]={};paths.forEach(function(p){compBot404[bot][p]=eBot404[bot][p];});
+  });
+  var compBot5xx={};Object.keys(eBot5xx).forEach(function(bot){
+    var paths=Object.keys(eBot5xx[bot]).sort(function(a,b){return eBot5xx[bot][b]-eBot5xx[bot][a];}).slice(0,20);
+    compBot5xx[bot]={};paths.forEach(function(p){compBot5xx[bot][p]=eBot5xx[bot][p];});
+  });
+
+  var daily={};
+  logs.forEach(function(l){var d=parseDate(l.datetime);if(!d)return;var k=d.toISOString().slice(0,10);if(!daily[k])daily[k]={total:0,bot:0,human:0};daily[k].total++;if(l.bot)daily[k].bot++;else daily[k].human++;});
+  var dailyArr=Object.keys(daily).sort().map(function(k){return Object.assign({date:k},daily[k]);});
+  var dateRange=dailyArr.length?{start:dailyArr[0].date,end:dailyArr[dailyArr.length-1].date}:{start:'',end:''};
+
+  var botOK=bots.filter(function(l){return l.status>=200&&l.status<300;}).length;
+  var eff=bots.length?Math.round(botOK/bots.length*100):0;
+  var totalBytes=logs.reduce(function(s,l){return s+l.bytes;},0);
+  var botBytes=bots.reduce(function(s,l){return s+l.bytes;},0);
+  var humanBytes=humans.reduce(function(s,l){return s+l.bytes;},0);
+  var uniqIPs={};logs.forEach(function(l){uniqIPs[l.ip]=1;});
+  var uniqPaths={};logs.forEach(function(l){uniqPaths[l.path]=1;});
+  var hpaths={};humans.forEach(function(l){hpaths[l.path]=1;});
+
+  return{
+    total:logs.length,botTotal:bots.length,humanTotal:humans.length,aiTotal:aiLogs.length,
+    uniqIPs:Object.keys(uniqIPs).length,uniqPaths:Object.keys(uniqPaths).length,
+    totalBytes:totalBytes,botBytes:botBytes,humanBytes:humanBytes,
+    humanUniqPaths:Object.keys(hpaths).length,
+    botBreakdown:botBreakdown,aiBreakdown:aiBreakdown,aiPages:aiPages,catTotals:catTotals,
+    stG:stG,stC:stC,bstG:bstG,
+    topPaths:topPaths,topBotPaths:topBotPaths,bpd:bpd,
+    ftA:ftA,ftB:ftB,topDirs:topDirs,
+    paramUrls:paramUrls,paramTotal:paramTotal,topRedir:topRedir,
+    top404:top404,top5xx:top5xx,eBot:eBot,eBot404:compBot404,eBot5xx:compBot5xx,
+    dailyArr:dailyArr,dateRange:dateRange,
+    eff:eff,botOK:botOK,bots:bots,all:logs
+  };
+}
+
+// ═══════════════════════════════════════════
+// ISSUES
+// ═══════════════════════════════════════════
+function buildIssues(d){
+  var issues=[];
+  var t5=(d.bstG['5xx']||0),t4=(d.bstG['4xx']||0),t3=(d.bstG['3xx']||0);
+  if(t5>0)issues.push({sev:'crit',type:'5xx',title:'Server Errors Blocking Crawlers',count:t5,
+    desc:t5+' bot requests got server errors (5xx). Search engines may reduce crawl frequency.',
+    det:'Top affected: '+d.top5xx.slice(0,3).map(function(p){return p.path;}).join(', '),
+    fix:'Check server error logs. Common causes: database timeouts, PHP fatal errors, memory limits. Fix the root cause.'});
+  if(t4>0)issues.push({sev:t4>100?'crit':t4>20?'warn':'info',type:'404',title:'Missing Pages (404 Errors)',count:t4,
+    desc:t4+' requests returned 404 "Not Found." These waste crawl budget and indicate broken links.',
+    det:'Top 404: '+d.top404.slice(0,3).map(function(p){return p.path;}).join(', '),
+    fix:'1) Set up 301 redirects from old URLs. 2) Find internal links pointing here and update them. 3) If permanently gone, use 410 instead of 404.'});
+  if(t3>0)issues.push({sev:(t3/(d.botTotal||1))>0.2?'warn':'info',type:'redirect',title:'Redirects Wasting Crawl Budget',count:t3,
+    desc:t3+' bot requests resulted in redirects ('+pct(t3,d.botTotal)+' of crawl). Each redirect is an extra request.',
+    det:'Update internal links to skip the redirect and point directly to the final URL.',
+    fix:'1) Update internal links to go straight to the final URL. 2) Ensure www/non-www and http/https redirect in a single hop.'});
+  if(d.paramTotal>0)issues.push({sev:d.paramTotal>100?'warn':'info',type:'param',title:'Parameter URLs Wasting Crawl Budget',count:d.paramTotal,
+    desc:d.paramTotal+' bot requests hit URLs with query parameters like ?sort=price. Often duplicates that waste crawl budget.',
+    det:'Example: '+d.paramUrls.slice(0,2).map(function(p){return p.path;}).join(', '),
+    fix:'1) Block parameter patterns in robots.txt. 2) Add rel=canonical on parameterised pages. 3) Configure URL parameters in Google Search Console.'});
+  if(d.eff<70&&d.botTotal>20)issues.push({sev:'crit',type:null,title:'Low Crawl Efficiency — '+d.eff+'%',count:null,
+    desc:'Only '+d.eff+'% of bot requests get a successful 200 response. Target 85%+.',
+    det:'Successful: '+fmtN(d.botOK)+' | Wasted: '+fmtN(d.botTotal-d.botOK),
+    fix:'Fix the 404 errors, redirect chains, and server errors above to bring efficiency above 85%.'});
+  if(d.aiTotal>0)issues.push({sev:'good',type:null,title:'AI Bots Are Crawling Your Site',count:d.aiTotal,
+    desc:d.aiTotal+' visits from AI crawlers ('+d.aiBreakdown.slice(0,3).map(function(b){return b.name;}).join(', ')+'). These tools use your content to answer user queries.',
+    det:'Check the "AI Bots" tab to see which pages AI tools are learning from.',
+    fix:'Keep important pages accessible to AI bots. Use robots.txt User-agent directives to restrict specific AI crawlers if needed.'});
+  if(!issues.length)issues.push({sev:'good',type:null,title:'No Issues Found',count:null,
+    desc:'Your log file looks healthy — no critical crawl issues detected.',det:'',fix:'Keep monitoring regularly.'});
+  return issues.sort(function(a,b){var o={crit:0,warn:1,info:2,good:3};return(o[a.sev]||9)-(o[b.sev]||9);});
+}
+
+// ═══════════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════════
+var TF={family:"'DM Sans',sans-serif",size:11};
+var PIE_O={responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{color:'#5f6368',font:TF,padding:10,boxWidth:12,boxHeight:12}},tooltip:{callbacks:{label:function(ctx){var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0);return' '+ctx.label+': '+fmtN(ctx.raw)+' ('+((ctx.raw/t)*100).toFixed(1)+'%)';}}}}};
+var BAR_V={responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return' '+fmtN(ctx.raw)+' requests';}}}},scales:{x:{ticks:{color:'#9aa0a6',font:{family:"'DM Sans'",size:10},maxRotation:40},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9aa0a6',font:TF},grid:{color:'#f1f3f4'},border:{display:false}}}};
+var LINE_O={responsive:true,maintainAspectRatio:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#5f6368',font:TF,padding:12,boxWidth:12}},tooltip:{callbacks:{label:function(ctx){return' '+ctx.dataset.label+': '+fmtN(ctx.raw);}}}},scales:{x:{ticks:{color:'#9aa0a6',font:{family:"'DM Sans'",size:10},maxTicksLimit:12},grid:{color:'#f1f3f4'},border:{display:false}},y:{ticks:{color:'#9aa0a6',font:TF},grid:{color:'#f1f3f4'},border:{display:false}}}};
+var SCOL={'2xx':'#34a853','3xx':'#1a73e8','4xx':'#fbbc04','5xx':'#ea4335'};
+var FTCOL={HTML:'#1a73e8',Image:'#34a853',CSS:'#fbbc04',JavaScript:'#ea4335',XML:'#9c27b0',JSON:'#ff9800',Font:'#607d8b',PDF:'#f44336',Other:'#9e9e9e'};
+var DIRCOL=['#1a73e8','#34a853','#ea4335','#fbbc04','#9c27b0','#ff9800','#607d8b','#00bcd4','#e91e63','#795548','#4caf50','#ff5722'];
+
+function mkChart(id,cfg){
+  if(CHARTS[id]){try{CHARTS[id].destroy();}catch(e){}delete CHARTS[id];}
+  var ctx=document.getElementById(id);if(!ctx)return;
+  CHARTS[id]=new Chart(ctx,cfg);
+}
+
+// ═══════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════
+function renderAll(){
+  try{
+    var d=G.analytics;
+    var hf=document.getElementById('hdr-file');
+    hf.textContent='📄 '+G.fileName;hf.style.display='inline';
+    var he=document.getElementById('hdr-ent');
+    he.innerHTML='<span class="chip c-blue">'+fmtN(d.total)+' entries</span>';he.style.display='inline';
+    if(d.dateRange&&d.dateRange.start){
+      var hd=document.getElementById('hdr-dates');
+      hd.innerHTML='<span class="chip c-grey">'+d.dateRange.start+' → '+d.dateRange.end+'</span>';hd.style.display='inline';
+    }
+    document.getElementById('btn-new').style.display='inline-block';
+    updateRecentBtn();
+    if(G.errors>0){var pn=document.getElementById('parse-notice');pn.textContent='⚠ '+G.errors.toLocaleString()+' lines skipped (non-standard format)';pn.style.display='block';}
+    if(G.isFromCache){var cn=document.getElementById('cached-note');cn.textContent='ℹ Loaded from project cache. Explore tab shows up to 1,500 entries. Re-upload file for full data.';cn.style.display='block';}
+    var issues=buildIssues(d);
+    var cw=issues.filter(function(i){return i.sev==='crit'||i.sev==='warn';}).length;
+    if(cw>0){var ib=document.getElementById('ibadge');ib.textContent=cw;ib.style.display='inline';}
+    showScreen('dash');
+    _err404Limit=10;_err5xxLimit=10;_errBotLimit=10;_errBotFilter=[];
+    rOverview(d);rCrawlers(d,'All');rAIBots(d);rPages(d);rBudget(d);
+    rIssues(d,issues);rErrors(d);rExploreSetup(d);
+  }catch(err){showScreen('loading');showErr('Render error: '+err.message);}
+}
+
+// ── Overview ──────────────────────────────
+function rOverview(d){
+  if(d.dateRange&&d.dateRange.start)document.getElementById('dbar').innerHTML='📅 <strong>'+d.dateRange.start+'</strong> → <strong>'+d.dateRange.end+'</strong>';
+  var botPct=d.total?Math.round(d.botTotal/d.total*100):0;
+  var effCol=d.eff>=80?'var(--green)':d.eff>=60?'var(--amber)':'var(--red)';
+  document.getElementById('sbanner').innerHTML='<span style="font-size:22px">📋</span><div class="sbanner-text"><strong>'+fmtN(d.total)+'</strong> total requests: <strong>'+fmtN(d.botTotal)+'</strong> bots ('+botPct+'%), <strong>'+fmtN(d.humanTotal)+'</strong> humans. Crawl efficiency: <strong style="color:'+effCol+'">'+d.eff+'%</strong>.</div>';
+  document.getElementById('kpi-grid').innerHTML=[
+    {l:'Total Requests',v:fmtN(d.total),s:'All visitors & bots'},
+    {l:'Bot/Crawler Visits',v:fmtN(d.botTotal),s:pct(d.botTotal,d.total)+' of traffic'},
+    {l:'Human Visits',v:fmtN(d.humanTotal),s:pct(d.humanTotal,d.total)+' of traffic'},
+    {l:'AI Bot Visits',v:fmtN(d.aiTotal),s:(d.aiBreakdown&&d.aiBreakdown.length||0)+' AI crawlers'},
+    {l:'Crawl Efficiency',v:d.eff+'%',s:d.eff>=80?'Good ✓':d.eff>=60?'Needs work':'Poor ⚠',vc:d.eff>=80?'good':d.eff>=60?'warn':'bad'},
+    {l:'Unique Pages',v:fmtN(d.uniqPaths),s:'Distinct URLs'},
+    {l:'Unique IPs',v:fmtN(d.uniqIPs),s:'Distinct visitors'},
+    {l:'Total Bandwidth',v:fmtBytes(d.totalBytes),s:'Data served'},
+  ].map(function(k){return'<div class="kc"><div class="kl">'+k.l+'</div><div class="kv '+(k.vc||'')+'">'+k.v+'</div><div class="ks">'+k.s+'</div></div>';}).join('');
+
+  if(d.dailyArr&&d.dailyArr.length>1){
+    mkChart('ch-timeline',{type:'line',data:{labels:d.dailyArr.map(function(r){return r.date;}),datasets:[
+      {label:'Bot/Crawler',data:d.dailyArr.map(function(r){return r.bot;}),borderColor:'#1a73e8',backgroundColor:'rgba(26,115,232,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
+      {label:'Human',data:d.dailyArr.map(function(r){return r.human;}),borderColor:'#34a853',backgroundColor:'rgba(52,168,83,.06)',fill:true,tension:.3,pointRadius:2,borderWidth:2}
+    ]},options:LINE_O});
+  }else{document.getElementById('tl-card').style.display='none';}
+
+  var catKeys=Object.keys(CAT_META).concat(['Human']).filter(function(k){return(d.catTotals[k]||0)>0;});
+  mkChart('ch-cat-pie',{type:'doughnut',data:{labels:catKeys,datasets:[{data:catKeys.map(function(k){return d.catTotals[k]||0;}),backgroundColor:catKeys.map(function(k){return k==='Human'?'#34a853':(CAT_META[k]||{color:'#ccc'}).color;}),borderWidth:0,hoverOffset:6}]},options:PIE_O});
+  var sgk=Object.keys(d.stG).filter(function(k){return k!=='other';});
+  mkChart('ch-status',{type:'doughnut',data:{labels:sgk,datasets:[{data:sgk.map(function(k){return d.stG[k];}),backgroundColor:sgk.map(function(k){return SCOL[k]||'#ccc';}),borderWidth:0,hoverOffset:6}]},options:PIE_O});
+}
+
+// ── Crawlers ──────────────────────────────
+function rCrawlers(d,filterCat){
+  _activeCatFilter=filterCat||'All';
+  var allCats=['All'];var catSeen={};
+  (d.botBreakdown||[]).forEach(function(b){if(!catSeen[b.category]){catSeen[b.category]=1;allCats.push(b.category);}});
+  allCats.push('Human');
+  document.getElementById('cat-overview').innerHTML=allCats.filter(function(c){return c!=='All';}).map(function(cat){
+    var count=cat==='Human'?d.humanTotal:(d.catTotals[cat]||0);if(!count)return'';
+    var meta=cat==='Human'?{color:'#34a853',icon:'👤'}:(CAT_META[cat]||{color:'#ccc',icon:'🤖'});
+    var uniqB=cat==='Human'?0:(d.botBreakdown||[]).filter(function(b){return b.category===cat;}).length;
+    return'<div class="cov-card" style="border-top-color:'+meta.color+'"><div class="cov-label">'+meta.icon+' '+cat+'</div><div class="cov-val">'+fmtN(count)+'</div><div class="cov-sub">'+(cat==='Human'?pct(count,d.total)+' of traffic':uniqB+' bot'+(uniqB!==1?'s':'')+' · '+pct(count,d.total))+'</div></div>';
+  }).join('');
+  document.getElementById('cat-tabs').innerHTML=allCats.map(function(cat){
+    var count=cat==='All'?(d.botTotal+d.humanTotal):cat==='Human'?d.humanTotal:(d.catTotals[cat]||0);
+    if(cat!=='All'&&!count)return'';
+    var meta=cat==='All'?{color:'#5f6368'}:cat==='Human'?{color:'#34a853'}:(CAT_META[cat]||{color:'#ccc'});
+    return'<button class="cat-tab'+(_activeCatFilter===cat?' active':'')+'" onclick="rCrawlers(G.analytics,\''+cat+'\')"><span class="cat-dot" style="background:'+meta.color+'"></span>'+esc(cat)+' <span class="cat-count">'+fmtN(count)+'</span></button>';
+  }).join('');
+  var hwrap=document.getElementById('human-card-wrap');
+  if(_activeCatFilter==='All'||_activeCatFilter==='Human'){
+    hwrap.innerHTML='<div class="human-card"><div class="human-card-title">👤 Human Traffic</div><div class="human-card-sub">Real visitors browsing your site — not bots or automated crawlers.</div><div class="human-stats-row"><div class="hstat"><div class="hstat-val">'+fmtN(d.humanTotal)+'</div><div class="hstat-lbl">Total Visits</div></div><div class="hstat"><div class="hstat-val">'+pct(d.humanTotal,d.total)+'</div><div class="hstat-lbl">of Traffic</div></div><div class="hstat"><div class="hstat-val">'+fmtN(d.humanUniqPaths||0)+'</div><div class="hstat-lbl">Unique Pages</div></div><div class="hstat"><div class="hstat-val">'+fmtBytes(d.humanBytes||0)+'</div><div class="hstat-lbl">Bandwidth</div></div></div></div>';
+  }else{hwrap.innerHTML='';}
+  var filtered=(_activeCatFilter==='All'||_activeCatFilter==='Human')?(d.botBreakdown||[]):( d.botBreakdown||[]).filter(function(b){return b.category===_activeCatFilter;});
+  var maxB=filtered[0]?filtered[0].count:1;
+  document.getElementById('bot-grid').innerHTML=filtered.map(function(b){
+    return'<div class="bc" style="border-top-color:'+b.color+'"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="bc-name">'+esc(b.name)+'</div><div class="bc-sub">'+catChip(b.category)+'</div></div><div class="bc-num">'+fmtN(b.count)+'</div></div><div class="bc-meta">'+b.uniq+' unique pages · '+fmtBytes(b.bytes)+'</div><div class="bprog"><div class="bpf" style="width:'+Math.round(b.count/maxB*100)+'%;background:'+b.color+'"></div></div><div class="bc-meta" style="margin-top:3px">'+pct(b.count,d.total)+' of all traffic</div></div>';
+  }).join('');
+  var bb=(d.botBreakdown||[]).slice(0,12);
+  mkChart('ch-bots',{type:'bar',data:{labels:bb.map(function(b){return b.name;}),datasets:[{data:bb.map(function(b){return b.count;}),backgroundColor:bb.map(function(b){return b.color+'cc';}),borderRadius:4}]},options:BAR_V});
+  var bbw=(d.botBreakdown||[]).filter(function(b){return b.bytes>0;}).slice(0,10);
+  if(bbw.length)mkChart('ch-bots-bw',{type:'bar',data:{labels:bbw.map(function(b){return b.name;}),datasets:[{data:bbw.map(function(b){return b.bytes;}),backgroundColor:bbw.map(function(b){return b.color+'cc';}),borderRadius:4}]},options:Object.assign({},BAR_V,{indexAxis:'y',plugins:Object.assign({},BAR_V.plugins,{tooltip:{callbacks:{label:function(ctx){return' '+fmtBytes(ctx.raw);}}}}),scales:{x:Object.assign({},BAR_V.scales.y),y:Object.assign({},BAR_V.scales.x,{ticks:{color:'#5f6368',font:TF},grid:{display:false}})}})});
+}
+
+// ── AI Bots ────────────────────────────────
+function rAIBots(d){
+  document.getElementById('ai-kpis').innerHTML=[
+    {l:'Total AI Bot Visits',v:fmtN(d.aiTotal),s:'From all AI crawlers'},
+    {l:'AI Crawlers Detected',v:String((d.aiBreakdown||[]).length),s:'Different AI tools'},
+    {l:'Pages Seen by AI',v:fmtN((d.aiPages||[]).length),s:'Distinct URLs'},
+  ].map(function(k){return'<div class="kc"><div class="kl">'+k.l+'</div><div class="kv">'+k.v+'</div><div class="ks">'+k.s+'</div></div>';}).join('');
+  if(!(d.aiBreakdown||[]).length){document.getElementById('ai-bot-grid').innerHTML='<div class="empty"><div class="empty-icon">🤖</div><div>No AI bots detected.</div></div>';}
+  else{var maxA=d.aiBreakdown[0].count;document.getElementById('ai-bot-grid').innerHTML=d.aiBreakdown.map(function(b){return'<div class="bc" style="border-top-color:'+b.color+'"><div style="display:flex;justify-content:space-between"><div><div class="bc-name">'+esc(b.name)+'</div><div class="bc-sub">AI Crawler</div></div><div class="bc-num">'+fmtN(b.count)+'</div></div><div class="bc-meta">'+b.uniq+' unique pages</div><div class="bprog"><div class="bpf" style="width:'+Math.round(b.count/maxA*100)+'%;background:'+b.color+'"></div></div></div>';}).join('');}
+  document.querySelector('#tbl-ai tbody').innerHTML=(d.aiPages||[]).length?(d.aiPages||[]).map(function(p,i){var bots=Object.keys(p.bots||{}).slice(0,3).map(function(b){return bchip(b)+' <small style="color:var(--t3)">'+p.bots[b]+'</small>';}).join(' ');return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp">'+esc(p.path)+'</span></td><td class="r tn">'+p.count+'</td><td>'+bots+'</td></tr>';}).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:24px">No AI bot page data found</td></tr>';
+}
+
+// ── Pages ──────────────────────────────────
+function rPages(d){
+  var ftS=Object.keys(d.ftB).sort(function(a,b){return d.ftB[b]-d.ftB[a];});var maxFT=ftS[0]?d.ftB[ftS[0]]:1;
+  document.getElementById('ft-bars').innerHTML=ftS.map(function(t){var w=Math.round(d.ftB[t]/maxFT*100);return'<div class="hbr"><div class="hbl">'+t+'</div><div class="hbt"><div class="hbf" style="width:'+w+'%;background:'+(FTCOL[t]||'#9e9e9e')+'">'+(w>18?fmtN(d.ftB[t]):'')+'</div></div><div class="hbc">'+fmtN(d.ftB[t])+'</div></div>';}).join('');
+  var maxD=d.topDirs[0]?d.topDirs[0].count:1;
+  document.getElementById('dir-bars').innerHTML=d.topDirs.map(function(dir,i){var w=Math.round(dir.count/maxD*100);return'<div class="hbr"><div class="hbl" title="'+esc(dir.dir)+'">'+esc(dir.dir)+'</div><div class="hbt"><div class="hbf" style="width:'+w+'%;background:'+DIRCOL[i%DIRCOL.length]+'">'+(w>18?fmtN(dir.count):'')+'</div></div><div class="hbc">'+fmtN(dir.count)+'</div></div>';}).join('');
+  var maxH=d.topPaths[0]?d.topPaths[0].count:1;
+  document.querySelector('#tbl-pages tbody').innerHTML=d.topPaths.map(function(p,i){var w=Math.round(p.count/maxH*100);return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p.path)+'">'+esc(p.path)+'</span></td><td class="r tn">'+p.count+'</td><td class="r tn">'+p.bot+'</td><td><div class="bari"><div class="bart"><div class="barf" style="width:'+w+'%"></div></div><span class="pctt">'+((p.count/d.total)*100).toFixed(1)+'%</span></div></td></tr>';}).join('');
+  document.querySelector('#tbl-botpages tbody').innerHTML=d.topBotPaths.map(function(p,i){var det=d.bpd[p.path]||{bots:{},statuses:{}};var bots=Object.keys(det.bots).slice(0,3).map(function(b){return bchip(b);}).join(' ');var sts=Object.keys(det.statuses).map(function(s){return schip(parseInt(s));}).join(' ');return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p.path)+'">'+esc(p.path)+'</span></td><td class="r tn">'+p.count+'</td><td>'+bots+'</td><td>'+sts+'</td></tr>';}).join('');
+}
+
+// ── Crawl Budget ───────────────────────────
+function rBudget(d){
+  var ec=d.eff>=85?'var(--green)':d.eff>=70?'var(--blue)':d.eff>=50?'var(--amber)':'var(--red)';
+  var el=d.eff>=85?'Excellent':d.eff>=70?'Good':d.eff>=50?'Fair':'Poor';
+  document.getElementById('eff-blk').innerHTML='<div class="eff-blk"><div class="eff-score" style="color:'+ec+'">'+d.eff+'%</div><div><div style="font-size:15px;font-weight:700;color:'+ec+'">'+el+' Crawl Efficiency</div><div style="font-size:13px;color:var(--t2);margin-top:4px;line-height:1.6">'+fmtN(d.botOK)+' of '+fmtN(d.botTotal)+' bot requests got 200 OK. Target: 85%+</div></div></div>';
+  var wasted=(d.bstG['3xx']||0)+(d.bstG['4xx']||0)+(d.bstG['5xx']||0);
+  document.getElementById('bud-grid').innerHTML=[
+    {l:'Successful Crawls',v:fmtN(d.bstG['2xx']||0),s:'200 OK',c:'var(--green)'},
+    {l:'Wasted on Redirects',v:fmtN(d.bstG['3xx']||0),s:pct(d.bstG['3xx']||0,d.botTotal),c:'var(--amber)'},
+    {l:'Wasted on Errors',v:fmtN((d.bstG['4xx']||0)+(d.bstG['5xx']||0)),s:pct(wasted,d.botTotal)+' of crawl',c:'var(--red)'},
+    {l:'Parameter URLs',v:fmtN(d.paramTotal),s:'Likely duplicates',c:'#9c27b0'},
+    {l:'Bot Bandwidth',v:fmtBytes(d.botBytes),s:'Data served to bots',c:'var(--blue)'},
+    {l:'Unique Pages Crawled',v:fmtN(Object.keys(d.bpd).length),s:'Distinct URLs',c:'var(--t1)'},
+  ].map(function(x){return'<div class="bud-item"><div class="bud-lbl">'+x.l+'</div><div class="bud-val" style="color:'+x.c+'">'+x.v+'</div><div class="bud-sub">'+x.s+'</div></div>';}).join('');
+  var bscK=Object.keys(d.bstG).filter(function(k){return k!=='other'&&d.bstG[k]>0;});
+  mkChart('ch-bud-status',{type:'doughnut',data:{labels:bscK,datasets:[{data:bscK.map(function(k){return d.bstG[k];}),backgroundColor:bscK.map(function(k){return SCOL[k]||'#ccc';}),borderWidth:0,hoverOffset:6}]},options:PIE_O});
+  var ftE=Object.keys(d.ftB).sort(function(a,b){return d.ftB[b]-d.ftB[a];}).slice(0,8);
+  mkChart('ch-bud-type',{type:'doughnut',data:{labels:ftE,datasets:[{data:ftE.map(function(k){return d.ftB[k];}),backgroundColor:ftE.map(function(k){return FTCOL[k]||'#9e9e9e';}),borderWidth:0,hoverOffset:6}]},options:PIE_O});
+  document.querySelector('#tbl-params tbody').innerHTML=d.paramUrls.length?d.paramUrls.map(function(p,i){return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p.path)+'">'+esc(p.path)+'</span></td><td class="r tn">'+p.count+'</td><td>'+(p.bot?bchip(p.bot):'')+'</td></tr>';}).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">✓ No parameter URLs found</td></tr>';
+  document.querySelector('#tbl-redirs tbody').innerHTML=d.topRedir.length?d.topRedir.map(function(p,i){return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp">'+esc(p.path)+'</span></td><td class="r tn">'+p.count+'</td><td>'+schip(p.status)+'</td></tr>';}).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">No redirected URLs found</td></tr>';
+}
+
+// ── Issues ─────────────────────────────────
+function rIssues(d,issues){
+  var crit=issues.filter(function(i){return i.sev==='crit';}).length;
+  var warn=issues.filter(function(i){return i.sev==='warn';}).length;
+  document.getElementById('issues-kpis').innerHTML=[
+    {l:'Critical',v:String(crit),vc:'bad'},{l:'Warnings',v:String(warn),vc:'warn'},
+    {l:'Info',v:String(issues.filter(function(i){return i.sev==='info';}).length),vc:''},
+    {l:'All Good',v:String(issues.filter(function(i){return i.sev==='good';}).length),vc:'good'},
+  ].map(function(k){return'<div class="kc"><div class="kl">'+k.l+'</div><div class="kv '+k.vc+'">'+k.v+'</div></div>';}).join('');
+  var bCls={crit:'bcrit',warn:'bwarn',info:'binfo',good:'bgood'};
+  var cCls={crit:'crit',warn:'warn',info:'info',good:'good'};
+  var bLbl={crit:'⚠ Critical',warn:'⚠ Warning',info:'ℹ Info',good:'✓ Good'};
+  document.getElementById('issues-list').innerHTML=issues.map(function(iss,idx){
+    var hasCheck=iss.type&&['404','5xx','redirect','param'].indexOf(iss.type)!==-1;
+    return'<div class="ic '+cCls[iss.sev]+'" id="issue-card-'+idx+'">' +
+      '<div class="ih"><span class="ibadge '+bCls[iss.sev]+'">'+bLbl[iss.sev]+'</span><span class="ititle">'+esc(iss.title)+'</span>'+(iss.count!==null?'<span class="icnt">'+fmtN(iss.count)+'</span>':'')+'</div>' +
+      '<div class="idesc">'+esc(iss.desc)+'</div>' +
+      (iss.det?'<div class="idet">'+esc(iss.det)+'</div>':'') +
+      '<div class="ifix"><strong>How to fix it:</strong> '+esc(iss.fix)+'</div>' +
+      (hasCheck?'<div class="i-footer"><button class="icheck-btn" onclick="toggleIssueCheck(\''+iss.type+'\','+idx+',this)">↗ Check URLs</button></div>':'') +
+      '<div class="issue-urls-expand" id="issue-expand-'+idx+'"></div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleIssueCheck(type,idx,btn){
+  var el=document.getElementById('issue-expand-'+idx);
+  if(el.classList.contains('open')){el.classList.remove('open');btn.textContent='↗ Check URLs';return;}
+  var d=G.analytics;var rows=[];
+  if(type==='404')rows=d.top404.map(function(p){return{url:p.path,count:p.count,label:'Hits'};});
+  else if(type==='5xx')rows=d.top5xx.map(function(p){return{url:p.path,count:p.count,label:'Errors'};});
+  else if(type==='redirect')rows=d.topRedir.map(function(p){return{url:p.path,count:p.count,label:'Hits'};});
+  else if(type==='param')rows=d.paramUrls.map(function(p){return{url:p.path,count:p.count,label:'Bot Hits'};});
+  if(!rows.length){el.innerHTML='<div style="color:var(--t3);font-size:13px;padding:8px">No URLs to show.</div>';el.classList.add('open');btn.textContent='↑ Close';return;}
+  el.innerHTML='<table class="issue-url-table">'+rows.map(function(r,i){return'<tr><td>'+(i+1)+'. '+esc(r.url)+'</td><td>'+fmtN(r.count)+' '+r.label+'</td></tr>';}).join('')+'</table>';
+  el.classList.add('open');btn.textContent='↑ Close';
+}
+
+// ── Errors ─────────────────────────────────
+function rErrors(d){
+  // Only show non-zero status codes as clickable cards
+  var errorCodes=[400,401,403,404,405,410,429,499,500,502,503,504];
+  var nonZero=errorCodes.filter(function(c){return(d.stC[c]||0)>0;});
+  document.getElementById('err-code-grid').innerHTML=nonZero.map(function(code){
+    var cnt=d.stC[code]||0;
+    var col=code>=500?'#c5221f':'#b06000';
+    var anchor=code===404?'err-sec-404':code>=500?'err-sec-5xx':'err-sec-other-'+code;
+    return'<div class="err-code-card" style="border-top-color:'+col+'" onclick="scrollToErr(\''+anchor+'\')"><div class="err-code-val" style="color:'+col+'">'+fmtN(cnt)+'</div><div class="err-code-lbl">HTTP '+code+'</div></div>';
+  }).join('');
+
+  // Error distribution chart (non-zero codes only)
+  var eE=nonZero.map(String);
+  if(eE.length)mkChart('ch-err',{type:'bar',data:{labels:eE,datasets:[{data:eE.map(function(c){return d.stC[c]||0;}),backgroundColor:eE.map(function(c){return parseInt(c)>=500?'#ea4335cc':'#fbbc04cc';}),borderRadius:4}]},options:BAR_V});
+
+  // Interactive HTML bars for "Errors by Crawler"
+  renderErrBotSection(d);
+
+  // 404 table (with bot column)
+  render404Table(d);
+  render5xxTable(d);
+
+  // Other error sections (3xx etc)
+  renderOtherErrSections(d,nonZero);
+}
+
+function scrollToErr(anchor){
+  var el=document.getElementById(anchor);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Errors by Crawler — interactive HTML bars, multi-select
+function renderErrBotSection(d){
+  if(!d)d=G.analytics;
+  var allBotErrs=Object.keys(d.eBot||{}).sort(function(a,b){return d.eBot[b]-d.eBot[a];});
+  var displayAll=allBotErrs.length<=_errBotLimit;
+  var visible=allBotErrs.slice(0,_errBotLimit);
+  var maxE=allBotErrs[0]?(d.eBot[allBotErrs[0]]||1):1;
+
+  // Selected chips
+  var filterBar=document.getElementById('err-bot-filter-bar');
+  var chips=document.getElementById('err-bot-chips');
+  if(_errBotFilter.length){
+    filterBar.style.display='flex';
+    chips.innerHTML=_errBotFilter.map(function(bot){
+      var c=getBotColor(bot);
+      return'<span class="err-bot-chip" style="background:'+c+'20;color:'+c+';border-color:'+c+'40">'+esc(bot)+'<button class="err-bot-chip-del" onclick="removeErrBotFilter(\''+esc(bot)+'\')">✕</button></span>';
+    }).join('');
+  }else{filterBar.style.display='none';}
+
+  document.getElementById('err-bot-bars').innerHTML=visible.map(function(bot){
+    var cnt=d.eBot[bot]||0;
+    var w=Math.round(cnt/maxE*100);
+    var c=getBotColor(bot);
+    var isSelected=_errBotFilter.indexOf(bot)!==-1;
+    return'<div class="err-bot-bar-row'+(isSelected?' selected':'')+'" onclick="toggleErrBotFilter(\''+esc(bot)+'\')" title="Click to filter errors by this bot">' +
+      '<div class="err-bot-bar-name">'+esc(bot)+'</div>' +
+      '<div class="err-bot-bar-track"><div class="err-bot-bar-fill" style="width:'+w+'%;background:'+c+'">'+( w>20?fmtN(cnt):'')+'</div></div>' +
+      '<div class="err-bot-bar-count">'+fmtN(cnt)+'</div>' +
+    '</div>';
+  }).join('');
+
+  var moreBtn=document.getElementById('err-bot-more-btn');
+  if(allBotErrs.length>_errBotLimit){
+    moreBtn.style.display='block';
+    moreBtn.textContent='Show '+(allBotErrs.length-_errBotLimit)+' more crawlers ▼';
+  }else{moreBtn.style.display='none';}
+}
+
+function showMoreErrBots(){_errBotLimit+=10;renderErrBotSection();}
+
+function toggleErrBotFilter(bot){
+  var idx=_errBotFilter.indexOf(bot);
+  if(idx===-1)_errBotFilter.push(bot);else _errBotFilter.splice(idx,1);
+  renderErrBotSection();render404Table();render5xxTable();
+}
+function removeErrBotFilter(bot){
+  _errBotFilter=_errBotFilter.filter(function(b){return b!==bot;});
+  renderErrBotSection();render404Table();render5xxTable();
+}
+function clearErrBotFilter(){_errBotFilter=[];renderErrBotSection();render404Table();render5xxTable();}
+
+// 404 table with bot filter and show more
+function render404Table(d){
+  if(!d)d=G.analytics;
+  var rows=d.top404||[];
+  // Apply bot filter
+  if(_errBotFilter.length){
+    // Filter to paths hit by any selected bot
+    rows=rows.filter(function(p){
+      return _errBotFilter.some(function(bot){return(d.eBot404&&d.eBot404[bot]&&d.eBot404[bot][p.path]);});
+    });
+  }
+  var visible=rows.slice(0,_err404Limit);
+  var tbody=document.querySelector('#tbl-404 tbody');
+  if(!visible.length){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">'+(_errBotFilter.length?'No 404 errors for selected bots.':'✓ No 404 errors found')+'</td></tr>';
+    document.getElementById('btn-more-404').style.display='none';return;
+  }
+  tbody.innerHTML=visible.map(function(p,i){
+    var botBadges='';
+    if(p.bots){var bs=Object.keys(p.bots).slice(0,3).map(function(b){return bchip(b);});botBadges=bs.join(' ');}
+    return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p.path)+'">'+esc(p.path)+'</span></td><td class="r tn" style="color:var(--amber)">'+p.count+'</td><td>'+botBadges+'</td></tr>';
+  }).join('');
+  var moreBtn=document.getElementById('btn-more-404');
+  if(rows.length>_err404Limit){moreBtn.style.display='block';moreBtn.textContent='Show '+(rows.length-_err404Limit)+' more ▼';}
+  else moreBtn.style.display='none';
+}
+function showMore404(){_err404Limit+=20;render404Table();}
+
+// 5xx table with bot filter and show more
+function render5xxTable(d){
+  if(!d)d=G.analytics;
+  var rows=d.top5xx||[];
+  if(_errBotFilter.length){
+    rows=rows.filter(function(p){
+      return _errBotFilter.some(function(bot){return(d.eBot5xx&&d.eBot5xx[bot]&&d.eBot5xx[bot][p.path]);});
+    });
+  }
+  var visible=rows.slice(0,_err5xxLimit);
+  var tbody=document.querySelector('#tbl-5xx tbody');
+  if(!visible.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">'+(_errBotFilter.length?'No 5xx errors for selected bots.':'✓ No server errors found')+'</td></tr>';
+    document.getElementById('btn-more-5xx').style.display='none';return;
+  }
+  tbody.innerHTML=visible.map(function(p,i){
+    var sts=Object.keys(p.codes||{}).map(function(s){return schip(parseInt(s))+' <small style="color:var(--t3)">×'+p.codes[s]+'</small>';}).join(' ');
+    var botBadges='';if(p.bots){var bs=Object.keys(p.bots).slice(0,2).map(function(b){return bchip(b);});botBadges=bs.join(' ');}
+    return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p.path)+'">'+esc(p.path)+'</span></td><td class="r tn" style="color:var(--red)">'+p.count+'</td><td>'+sts+'</td><td>'+botBadges+'</td></tr>';
+  }).join('');
+  var moreBtn=document.getElementById('btn-more-5xx');
+  if(rows.length>_err5xxLimit){moreBtn.style.display='block';moreBtn.textContent='Show '+(rows.length-_err5xxLimit)+' more ▼';}
+  else moreBtn.style.display='none';
+}
+function showMore5xx(){_err5xxLimit+=20;render5xxTable();}
+
+// Other error codes (3xx, 400, 401, 403, etc.)
+function renderOtherErrSections(d,nonZero){
+  var otherCodes=nonZero.filter(function(c){return c!==404&&c<500;});
+  var container=document.getElementById('err-other-sections');
+  container.innerHTML=otherCodes.map(function(code){
+    var label={400:'Bad Request',401:'Unauthorized',403:'Forbidden',405:'Method Not Allowed',410:'Gone',429:'Too Many Requests',499:'Client Closed Request'}[code]||('HTTP '+code);
+    var paths=Object.keys(d.stC).length?[]:[];
+    // Build from raw or from bots
+    var bpaths={};
+    (d.bots||[]).filter(function(l){return l.status===code;}).forEach(function(l){bpaths[l.path]=(bpaths[l.path]||0)+1;});
+    var sorted=Object.keys(bpaths).sort(function(a,b){return bpaths[b]-bpaths[a];}).slice(0,10);
+    var col=code>=400&&code<500?'#b06000':'#1a73e8';
+    return'<div class="card err-section-anchor" id="err-sec-other-'+code+'" style="margin-top:13px">' +
+      '<div class="ct">HTTP '+code+' — '+label+'</div>' +
+      '<div class="cs">'+fmtN(d.stC[code]||0)+' occurrences</div>' +
+      (sorted.length?'<div class="tw"><table><thead><tr><th>#</th><th>URL</th><th class="r">Hits</th></tr></thead><tbody>'+sorted.map(function(p,i){return'<tr><td class="td">'+(i+1)+'</td><td><span class="tp" title="'+esc(p)+'">'+esc(p)+'</span></td><td class="r tn" style="color:'+col+'">'+bpaths[p]+'</td></tr>';}).join('')+'</tbody></table></div>':'<div style="color:var(--t3);font-size:13px;padding:8px 0">No URL detail available (re-upload file for full data).</div>') +
+    '</div>';
+  }).join('');
+}
+
+// ── Explore ────────────────────────────────
+function rExploreSetup(d){
+  var sel=document.getElementById('f-bot');
+  sel.innerHTML='<option value="">All crawlers</option>'+(d.botBreakdown||[]).map(function(b){return'<option value="'+esc(b.name)+'">'+esc(b.name)+' ('+b.count+')</option>';}).join('');
+  renderExplore();
+}
+function renderExplore(){
+  if(!G.analytics)return;
+  var d=G.analytics;
+  var pathQ=(document.getElementById('f-path').value||'').toLowerCase();
+  var botQ=document.getElementById('f-bot').value;
+  var stQ=document.getElementById('f-status').value;
+  var methQ=document.getElementById('f-method').value;
+  var typeQ=document.getElementById('f-type').value;
+  var traffic=document.getElementById('f-traffic').value;
+  var LIMIT=1000;
+  var pool=traffic==='bots'?d.bots:traffic==='human'?d.all.filter(function(l){return !l.bot;}):d.all;
+  _filtered=pool.filter(function(l){
+    if(pathQ&&(l.path||'').toLowerCase().indexOf(pathQ)===-1)return false;
+    if(botQ&&l.bot!==botQ)return false;
+    if(stQ&&String(l.status)[0]!==stQ)return false;
+    if(methQ&&l.method!==methQ)return false;
+    if(typeQ&&fileType(l.path)!==typeQ)return false;
+    return true;
+  });
+  document.getElementById('exp-cnt').textContent=_filtered.length.toLocaleString()+' entries';
+  document.getElementById('exp-tbody').innerHTML=_filtered.slice(0,LIMIT).map(function(l){
+    var bc=l.bot?getBotColor(l.bot):null;
+    var cat=l.bot?getBotCat(l.bot):'Human';
+    var catM=cat==='Human'?{color:'#34a853',icon:'👤'}:(CAT_META[cat]||{color:'#ccc',icon:'🤖'});
+    var botCell=l.bot?'<span style="background:'+bc+'20;color:'+bc+';border:1px solid '+bc+'40;padding:2px 6px;border-radius:9px;font-size:11px;font-weight:600">'+esc(l.bot)+'</span>':'<span style="color:var(--t3);font-size:11px">Human</span>';
+    var ftype=fileType(l.path);
+    return'<tr>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--t2)">'+esc(l.ip)+'</td>' +
+      '<td style="font-size:11px;color:var(--t3);white-space:nowrap">'+esc(l.datetime||'')+'</td>' +
+      '<td><span style="background:#f1f3f4;color:var(--t2);padding:2px 6px;border-radius:4px;font-size:11px;font-weight:500;font-family:\'DM Mono\',monospace">'+esc(l.method)+'</span></td>' +
+      '<td>'+typeBadge(ftype)+'</td>' +
+      '<td style="max-width:260px"><span class="tp" title="'+esc(l.path)+'">'+esc(l.path)+'</span></td>' +
+      '<td>'+schip(l.status)+'</td>' +
+      '<td style="font-size:11px;color:var(--t3)">'+fmtBytes(l.bytes)+'</td>' +
+      '<td><span style="background:'+catM.color+'18;color:'+catM.color+';border:1px solid '+catM.color+'30;padding:2px 7px;border-radius:9px;font-size:11px;font-weight:600">'+catM.icon+' '+esc(cat)+'</span></td>' +
+      '<td>'+botCell+'</td>' +
+    '</tr>';
+  }).join('');
+  var more=document.getElementById('exp-more');
+  if(_filtered.length>LIMIT){more.style.display='block';more.textContent='Showing '+LIMIT.toLocaleString()+' of '+_filtered.length.toLocaleString()+' entries. Use filters or export CSV.';}
+  else more.style.display='none';
+}
+function resetFilters(){['f-path','f-bot','f-status','f-method','f-type'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('f-traffic').value='bots';renderExplore();}
+function exportCSV(){
+  if(!_filtered.length){alert('No data to export. Load a file first.');return;}
+  var csv=[['IP','DateTime','Method','Type','Path','Status','Bytes','Category','Bot']].concat(_filtered.map(function(l){var cat=l.bot?getBotCat(l.bot):'Human';return[l.ip,l.datetime,l.method,fileType(l.path),l.path,l.status,l.bytes,cat,l.bot||'Human'];})).map(function(r){return r.map(function(c){return'"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='seo-log-export.csv';a.click();
+}
+
+// ═══════════════════════════════════════════
+// SCREEN / TAB
+// ═══════════════════════════════════════════
+function showScreen(s){
+  document.getElementById('upload-screen').style.display=(s==='upload'?'flex':'none');
+  document.getElementById('loading-screen').style.display=(s==='loading'?'flex':'none');
+  document.getElementById('dashboard').style.display=(s==='dash'?'block':'none');
+}
+function sw(name){
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===name);});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id==='panel-'+name);});
+  if(name==='explore')renderExplore();
+}
+function resetApp(){
+  G={parsed:[],analytics:null,fileName:'',errors:0,lines:[],idx:0,isFromCache:false};
+  G_FILES=[];_filtered=[];_activeCatFilter='All';_errBotFilter=[];_err404Limit=10;_err5xxLimit=10;_errBotLimit=10;
+  Object.keys(CHARTS).forEach(function(k){try{CHARTS[k].destroy();}catch(e){}delete CHARTS[k];});
+  document.getElementById('file-in').value='';
+  ['hdr-file','hdr-ent','hdr-dates'].forEach(function(id){document.getElementById(id).style.display='none';});
+  ['btn-new','btn-recents'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('ibadge').style.display='none';
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('parse-notice').style.display='none';
+  document.getElementById('cached-note').style.display='none';
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.toggle('active',t.dataset.tab==='overview');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id==='panel-overview');});
+  renderQueue();closePanel();renderRecentUpload();updateRecentBtn();showScreen('upload');
+}
+
+// Init
+renderRecentUpload();updateRecentBtn();
+</script>
+</body>
+</html>
